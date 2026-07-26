@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
     /**
      * Bắt mọi exception chưa lường trước (bug, lỗi hạ tầng...). Log đầy đủ stack trace
      * phía server để debug, nhưng KHÔNG bao giờ trả chi tiết lỗi thật ra response
-     * (tránh lộ thông tin nội bộ - xem docs/PROJECT_OVERVIEW.md mục 10.6).
+     * (tránh lộ thông tin nội bộ - xem docs/PROJECT_OVERVIEW.md mục 10.7).
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
