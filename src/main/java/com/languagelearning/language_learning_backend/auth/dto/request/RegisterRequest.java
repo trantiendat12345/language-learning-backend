@@ -18,6 +18,7 @@ public class RegisterRequest {
 
     @NotBlank(message = ValidationMessage.USERNAME_REQUIRED)
     @Size(min = 3, max = 50, message = ValidationMessage.USERNAME_SIZE)
+    @Pattern(regexp = "^\\S+$", message = ValidationMessage.USERNAME_NO_WHITESPACE)
     private String username;
 
     @NotBlank(message = ValidationMessage.EMAIL_REQUIRED)

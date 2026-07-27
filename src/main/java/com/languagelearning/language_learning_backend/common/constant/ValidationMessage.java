@@ -13,6 +13,7 @@ public final class ValidationMessage {
     // Auth - Register/Login (Giai đoạn 2)
     public static final String USERNAME_REQUIRED = "Username không được để trống";
     public static final String USERNAME_SIZE = "Username phải từ 3 đến 50 ký tự";
+    public static final String USERNAME_NO_WHITESPACE = "Username không được chứa khoảng trắng";
     public static final String EMAIL_REQUIRED = "Email không được để trống";
     public static final String EMAIL_INVALID = "Email không đúng định dạng";
     public static final String PASSWORD_REQUIRED = "Password không được để trống";
