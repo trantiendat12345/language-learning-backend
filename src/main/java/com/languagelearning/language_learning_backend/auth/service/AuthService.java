@@ -22,8 +22,12 @@ import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.enums.UserStatus;
 import com.languagelearning.language_learning_backend.user.dto.response.UserResponse;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -106,7 +110,7 @@ public class AuthService {
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setUser(user);
         verificationToken.setType(TokenType.EMAIL_VERIFY);
-        verificationToken.setTokenHash(rawToken);
+        verificationToken.setTokenHash(hashToken(rawToken));
         verificationToken.setExpiresAt(LocalDateTime.now().plusHours(EMAIL_VERIFY_TOKEN_HOURS));
         verificationTokenRepository.save(verificationToken);
 
@@ -147,7 +151,7 @@ public class AuthService {
         String rawRefreshToken = generateOpaqueToken();
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
-        refreshToken.setTokenHash(rawRefreshToken);
+        refreshToken.setTokenHash(hashToken(rawRefreshToken));
         refreshToken.setExpiresAt(LocalDateTime.now().plus(Duration.ofMillis(refreshTokenExpirationMs)));
         refreshTokenRepository.save(refreshToken);
 
@@ -167,5 +171,22 @@ public class AuthService {
     /** Sinh chuỗi ngẫu nhiên dùng làm token cho VerificationToken/RefreshToken (không phải JWT). */
     private String generateOpaqueToken() {
         return UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * Hash SHA-256 token trước khi lưu DB — chỉ trả token gốc (raw) cho client/log 1 lần
+     * duy nhất lúc tạo, DB chỉ giữ bản hash để lộ DB không đồng nghĩa lộ token dùng được
+     * ngay (giống cách lưu password, khác ở chỗ không cần salt vì token đã đủ ngẫu nhiên).
+     * Endpoint verify-email/refresh-token (làm ở lượt sau) phải hash token nhận từ client
+     * theo đúng cách này trước khi so khớp với tokenHash trong DB.
+     */
+    private String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 không khả dụng trên JVM này", e);
+        }
     }
 }

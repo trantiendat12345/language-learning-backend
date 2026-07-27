@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import com.languagelearning.language_learning_backend.auth.dto.request.LoginRequest;
 import com.languagelearning.language_learning_backend.auth.dto.request.RegisterRequest;
 import com.languagelearning.language_learning_backend.auth.dto.response.AuthResponse;
+import com.languagelearning.language_learning_backend.auth.entity.RefreshToken;
+import com.languagelearning.language_learning_backend.auth.entity.VerificationToken;
 import com.languagelearning.language_learning_backend.auth.exception.AccountDisabledException;
 import com.languagelearning.language_learning_backend.auth.exception.AccountLockedException;
 import com.languagelearning.language_learning_backend.auth.exception.EmailNotVerifiedException;
@@ -32,6 +34,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,6 +60,12 @@ class AuthServiceTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Captor
+    private ArgumentCaptor<VerificationToken> verificationTokenCaptor;
+
+    @Captor
+    private ArgumentCaptor<RefreshToken> refreshTokenCaptor;
 
     private AuthService authService;
 
@@ -99,7 +109,13 @@ class AuthServiceTest {
 
         assertThat(response.getUsername()).isEqualTo("newuser01");
         assertThat(response.getStatus()).isEqualTo(UserStatus.PENDING_VERIFICATION);
-        verify(verificationTokenRepository).save(any());
+        verify(verificationTokenRepository).save(verificationTokenCaptor.capture());
+        // Không thể lấy trực tiếp token gốc (chỉ log ra, không trả về UserResponse), nhưng
+        // vẫn khẳng định được: giá trị lưu DB đúng định dạng SHA-256 hex digest (64 ký tự
+        // hex thường) — bằng chứng gián tiếp hashToken() đã chạy. Test chính xác hơn (so
+        // token gốc vs hash) nằm ở login_storesRefreshTokenAsSha256Hash_notThePlaintextValue
+        // bên dưới, vì login trả token gốc ra AuthResponse nên so sánh được trực tiếp.
+        assertThat(verificationTokenCaptor.getValue().getTokenHash()).hasSize(64).matches("^[0-9a-f]{64}$");
     }
 
     @Test
@@ -159,6 +175,26 @@ class AuthServiceTest {
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isNotBlank();
         verify(refreshTokenRepository).save(any());
+    }
+
+    @Test
+    void login_storesRefreshTokenAsSha256Hash_notThePlaintextValue() throws Exception {
+        User user = activeUser();
+        when(userRepository.findByUsernameOrEmail("user01")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Passw0rd1", "hashed-password")).thenReturn(true);
+        when(jwtService.generateAccessToken(1L, "user01", java.util.List.of())).thenReturn("access-token");
+
+        AuthResponse response = authService.login(loginRequest());
+
+        verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
+        String rawTokenReturnedToClient = response.getRefreshToken();
+        String storedHash = refreshTokenCaptor.getValue().getTokenHash();
+
+        java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+        String expectedHash = java.util.HexFormat.of()
+                .formatHex(digest.digest(rawTokenReturnedToClient.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+
+        assertThat(storedHash).isNotEqualTo(rawTokenReturnedToClient).isEqualTo(expectedHash);
     }
 
     @Test
