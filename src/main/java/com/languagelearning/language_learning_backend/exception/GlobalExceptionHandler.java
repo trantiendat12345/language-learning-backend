@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Nơi duy nhất chuyển exception thành ApiErrorResponse cho toàn bộ API - Controller
@@ -53,6 +54,21 @@ public class GlobalExceptionHandler {
                 .errors(fieldErrors)
                 .build();
         return ResponseEntity.badRequest().body(body);
+    }
+
+    /**
+     * Bắt request tới URL không khớp bất kỳ Controller/static resource nào (Spring 6.1+/Boot 3.2+
+     * tự ném exception này thay vì âm thầm trả 404) — phải xử lý riêng, nếu không catch-all bên
+     * dưới sẽ biến 1 lỗi "không tìm thấy route" bình thường thành 500 sai lệch.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .code(HttpStatus.NOT_FOUND.value())
+                .errorCode(ErrorCode.RESOURCE_NOT_FOUND)
+                .message(ErrorMessage.RESOURCE_NOT_FOUND)
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     /**
