@@ -6,6 +6,7 @@ import com.languagelearning.language_learning_backend.security.JwtAuthentication
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * (không session), public cho `/api/auth/**` + Swagger, còn lại bắt buộc authenticated.
  * `JwtAuthenticationFilter` chạy trước `UsernamePasswordAuthenticationFilter` để đọc token
  * từ header Authorization trước khi Spring Security xử lý xác thực mặc định.
+ * `.cors(Customizer.withDefaults())` tự lấy bean `CorsConfigurationSource` khai báo ở
+ * `CorsConfig` — bắt buộc phải bật vì `/api/auth/login` set cookie refresh token httpOnly,
+ * nếu không bật CORS đúng cách trình duyệt sẽ chặn cookie khi Frontend gọi từ origin khác.
  */
 @Configuration
 @EnableWebSecurity
@@ -38,6 +42,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
