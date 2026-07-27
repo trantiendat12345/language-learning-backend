@@ -17,4 +17,17 @@ public final class ErrorMessage {
     public static final String FORBIDDEN = "Bạn không có quyền thực hiện thao tác này";
     public static final String DUPLICATE_RESOURCE = "Dữ liệu đã tồn tại";
     public static final String INTERNAL_ERROR = "Đã có lỗi xảy ra, vui lòng thử lại sau";
+
+    // Auth-specific (Giai đoạn 2) — message chung chung cho sai username/password, cố tình
+    // giống hệt nhau để không tiết lộ username có tồn tại hay không (11_FRS_TC_AUTH.md).
+    public static final String AUTH_INVALID_CREDENTIALS = "Sai thông tin đăng nhập";
+    public static final String AUTH_ACCOUNT_DISABLED = "Tài khoản đã bị vô hiệu hoá";
+    public static final String AUTH_ACCOUNT_LOCKED = "Tài khoản đang bị khoá";
+    public static final String AUTH_EMAIL_NOT_VERIFIED = "Vui lòng xác thực email trước khi đăng nhập";
+    public static final String AUTH_TOKEN_EXPIRED = "Token đã hết hạn";
+    public static final String AUTH_TOKEN_INVALID = "Token không hợp lệ";
+    public static final String AUTH_TOKEN_ALREADY_USED = "Token đã được sử dụng hoặc hết hạn";
+    public static final String AUTH_USERNAME_TAKEN = "Username đã tồn tại";
+    public static final String AUTH_EMAIL_TAKEN = "Email đã tồn tại";
+    public static final String AUTH_PASSWORD_MISMATCH = "Confirm password không khớp với password";
 }

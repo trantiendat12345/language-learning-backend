@@ -1,0 +1,22 @@
+package com.languagelearning.language_learning_backend.common.constant;
+
+/**
+ * Message hiển thị cho từng field khi Bean Validation (@NotBlank, @Size...) trên Request DTO
+ * bắt lỗi - gán vào thuộc tính message của annotation thay vì viết chuỗi trực tiếp tại DTO,
+ * để tránh 1 câu báo lỗi bị viết nhiều kiểu khác nhau ở nhiều DTO.
+ */
+public final class ValidationMessage {
+
+    private ValidationMessage() {
+    }
+
+    // Auth - Register/Login (Giai đoạn 2)
+    public static final String USERNAME_REQUIRED = "Username không được để trống";
+    public static final String USERNAME_SIZE = "Username phải từ 3 đến 50 ký tự";
+    public static final String EMAIL_REQUIRED = "Email không được để trống";
+    public static final String EMAIL_INVALID = "Email không đúng định dạng";
+    public static final String PASSWORD_REQUIRED = "Password không được để trống";
+    public static final String PASSWORD_PATTERN =
+            "Password phải từ 8 ký tự trở lên, có ít nhất 1 chữ và 1 số";
+    public static final String CONFIRM_PASSWORD_REQUIRED = "Confirm password không được để trống";
+}

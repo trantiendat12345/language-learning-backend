@@ -17,4 +17,12 @@ public class UnauthorizedException extends BusinessException {
     public UnauthorizedException() {
         this(ErrorMessage.UNAUTHORIZED);
     }
+
+    /**
+     * Dùng cho exception con cần giữ nguyên HTTP 401 nhưng thay errorCode/message riêng
+     * (vd sai mật khẩu, tài khoản bị khoá) thay vì luôn dùng errorCode UNAUTHORIZED mặc định.
+     */
+    protected UnauthorizedException(String errorCode, String message) {
+        super(HttpStatus.UNAUTHORIZED, errorCode, message);
+    }
 }

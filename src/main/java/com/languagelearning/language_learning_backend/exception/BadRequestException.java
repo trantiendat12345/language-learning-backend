@@ -17,4 +17,12 @@ public class BadRequestException extends BusinessException {
     public BadRequestException() {
         this(ErrorMessage.BAD_REQUEST);
     }
+
+    /**
+     * Dùng cho exception con cần giữ nguyên HTTP 400 nhưng thay errorCode/message riêng
+     * (vd confirmPassword không khớp password) thay vì luôn dùng errorCode BAD_REQUEST mặc định.
+     */
+    protected BadRequestException(String errorCode, String message) {
+        super(HttpStatus.BAD_REQUEST, errorCode, message);
+    }
 }

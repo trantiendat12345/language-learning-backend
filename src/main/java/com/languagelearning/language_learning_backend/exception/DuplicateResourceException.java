@@ -18,4 +18,12 @@ public class DuplicateResourceException extends BusinessException {
     public DuplicateResourceException() {
         this(ErrorMessage.DUPLICATE_RESOURCE);
     }
+
+    /**
+     * Dùng cho exception con cần giữ nguyên HTTP 409 nhưng thay errorCode/message riêng
+     * (vd username đã tồn tại, email đã tồn tại) thay vì luôn dùng errorCode DUPLICATE_RESOURCE mặc định.
+     */
+    protected DuplicateResourceException(String errorCode, String message) {
+        super(HttpStatus.CONFLICT, errorCode, message);
+    }
 }
