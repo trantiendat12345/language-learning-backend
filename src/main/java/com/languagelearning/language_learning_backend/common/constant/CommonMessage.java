@@ -24,4 +24,8 @@ public final class CommonMessage {
             "Nếu email tồn tại trong hệ thống, link đặt lại mật khẩu đã được gửi";
     public static final String AUTH_RESET_PASSWORD_SUCCESS = "Đặt lại mật khẩu thành công";
     public static final String AUTH_VERIFY_EMAIL_SUCCESS = "Xác thực email thành công";
+
+    // User Profile (Giai đoạn 2)
+    public static final String USER_PROFILE_UPDATE_SUCCESS = "Cập nhật hồ sơ thành công";
+    public static final String USER_CHANGE_PASSWORD_SUCCESS = "Đổi mật khẩu thành công";
 }

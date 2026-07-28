@@ -25,4 +25,15 @@ public final class ValidationMessage {
     public static final String TOKEN_REQUIRED = "Token không được để trống";
     public static final String NEW_PASSWORD_REQUIRED = "Password mới không được để trống";
     public static final String CONFIRM_NEW_PASSWORD_REQUIRED = "Confirm password mới không được để trống";
+
+    // User - Change Password (Giai đoạn 2)
+    public static final String CURRENT_PASSWORD_REQUIRED = "Password hiện tại không được để trống";
+
+    // User - Edit Profile (Giai đoạn 2)
+    public static final String DISPLAY_NAME_SIZE = "Tên hiển thị tối đa 100 ký tự";
+    public static final String AVATAR_URL_SIZE = "Avatar URL tối đa 500 ký tự";
+    public static final String GENDER_SIZE = "Giới tính tối đa 20 ký tự";
+    public static final String COUNTRY_SIZE = "Quốc gia tối đa 100 ký tự";
+    public static final String CURRENT_LEVEL_SIZE = "Trình độ tối đa 20 ký tự";
+    public static final String BIRTHDAY_MUST_BE_PAST = "Ngày sinh phải là 1 ngày trong quá khứ";
 }

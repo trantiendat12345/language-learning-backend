@@ -30,4 +30,5 @@ public final class ErrorMessage {
     public static final String AUTH_USERNAME_TAKEN = "Username đã tồn tại";
     public static final String AUTH_EMAIL_TAKEN = "Email đã tồn tại";
     public static final String AUTH_PASSWORD_MISMATCH = "Confirm password không khớp với password";
+    public static final String AUTH_NEW_PASSWORD_SAME_AS_CURRENT = "Password mới không được trùng với password hiện tại";
 }

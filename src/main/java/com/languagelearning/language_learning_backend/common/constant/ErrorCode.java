@@ -29,4 +29,5 @@ public final class ErrorCode {
     public static final String AUTH_USERNAME_TAKEN = "AUTH_USERNAME_TAKEN";
     public static final String AUTH_EMAIL_TAKEN = "AUTH_EMAIL_TAKEN";
     public static final String AUTH_PASSWORD_MISMATCH = "AUTH_PASSWORD_MISMATCH";
+    public static final String AUTH_NEW_PASSWORD_SAME_AS_CURRENT = "AUTH_NEW_PASSWORD_SAME_AS_CURRENT";
 }
