@@ -27,6 +27,7 @@ import com.languagelearning.language_learning_backend.security.JwtService;
 import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.enums.UserStatus;
 import com.languagelearning.language_learning_backend.user.dto.response.UserResponse;
+import com.languagelearning.language_learning_backend.user.mapper.UserMapper;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -65,6 +66,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserMapper userMapper;
     private final long refreshTokenExpirationMs;
 
     public AuthService(
@@ -74,6 +76,7 @@ public class AuthService {
             RefreshTokenRepository refreshTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
+            UserMapper userMapper,
             @Value("${jwt.refresh-expiration}") long refreshTokenExpirationMs) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -81,6 +84,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
@@ -120,7 +124,7 @@ public class AuthService {
                 user.getEmail(),
                 rawToken);
 
-        return toUserResponse(user);
+        return userMapper.toResponse(user);
     }
 
     /**
@@ -257,16 +261,6 @@ public class AuthService {
 
         token.setUsedAt(LocalDateTime.now());
         verificationTokenRepository.save(token);
-    }
-
-    private UserResponse toUserResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .displayName(user.getDisplayName())
-                .status(user.getStatus())
-                .build();
     }
 
     /** Sinh chuỗi ngẫu nhiên dùng làm token cho VerificationToken/RefreshToken (không phải JWT). */

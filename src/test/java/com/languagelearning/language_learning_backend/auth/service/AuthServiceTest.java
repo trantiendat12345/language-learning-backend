@@ -35,6 +35,7 @@ import com.languagelearning.language_learning_backend.security.JwtService;
 import com.languagelearning.language_learning_backend.user.dto.response.UserResponse;
 import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.enums.UserStatus;
+import com.languagelearning.language_learning_backend.user.mapper.UserMapper;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
+import org.mapstruct.factory.Mappers;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,6 +86,9 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        // UserMapper chỉ map field 1-1, không có logic cần mock - dùng bản implementation
+        // thật do MapStruct generate thay vì Mockito mock (mock sẽ luôn trả null, làm sai
+        // các assertion đọc field từ UserResponse trả về).
         authService = new AuthService(
                 userRepository,
                 roleRepository,
@@ -91,6 +96,7 @@ class AuthServiceTest {
                 refreshTokenRepository,
                 passwordEncoder,
                 jwtService,
+                Mappers.getMapper(UserMapper.class),
                 604_800_000L);
     }
 
