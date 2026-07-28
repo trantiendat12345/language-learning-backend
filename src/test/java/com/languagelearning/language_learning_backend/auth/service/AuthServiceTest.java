@@ -8,17 +8,24 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.languagelearning.language_learning_backend.auth.dto.request.ForgotPasswordRequest;
 import com.languagelearning.language_learning_backend.auth.dto.request.LoginRequest;
 import com.languagelearning.language_learning_backend.auth.dto.request.RegisterRequest;
+import com.languagelearning.language_learning_backend.auth.dto.request.ResetPasswordRequest;
+import com.languagelearning.language_learning_backend.auth.dto.response.AccessTokenResponse;
 import com.languagelearning.language_learning_backend.auth.dto.response.AuthResponse;
 import com.languagelearning.language_learning_backend.auth.entity.RefreshToken;
 import com.languagelearning.language_learning_backend.auth.entity.VerificationToken;
+import com.languagelearning.language_learning_backend.auth.enums.TokenType;
 import com.languagelearning.language_learning_backend.auth.exception.AccountDisabledException;
 import com.languagelearning.language_learning_backend.auth.exception.AccountLockedException;
 import com.languagelearning.language_learning_backend.auth.exception.EmailNotVerifiedException;
 import com.languagelearning.language_learning_backend.auth.exception.EmailTakenException;
 import com.languagelearning.language_learning_backend.auth.exception.InvalidCredentialsException;
 import com.languagelearning.language_learning_backend.auth.exception.PasswordMismatchException;
+import com.languagelearning.language_learning_backend.auth.exception.TokenAlreadyUsedException;
+import com.languagelearning.language_learning_backend.auth.exception.TokenExpiredException;
+import com.languagelearning.language_learning_backend.auth.exception.TokenInvalidException;
 import com.languagelearning.language_learning_backend.auth.exception.UsernameTakenException;
 import com.languagelearning.language_learning_backend.auth.repository.RefreshTokenRepository;
 import com.languagelearning.language_learning_backend.auth.repository.VerificationTokenRepository;
@@ -29,6 +36,12 @@ import com.languagelearning.language_learning_backend.user.dto.response.UserResp
 import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.enums.UserStatus;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -190,11 +203,7 @@ class AuthServiceTest {
         String rawTokenReturnedToClient = response.getRefreshToken();
         String storedHash = refreshTokenCaptor.getValue().getTokenHash();
 
-        java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-        String expectedHash = java.util.HexFormat.of()
-                .formatHex(digest.digest(rawTokenReturnedToClient.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-
-        assertThat(storedHash).isNotEqualTo(rawTokenReturnedToClient).isEqualTo(expectedHash);
+        assertThat(storedHash).isNotEqualTo(rawTokenReturnedToClient).isEqualTo(sha256Hex(rawTokenReturnedToClient));
     }
 
     @Test
@@ -241,5 +250,265 @@ class AuthServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
         assertThatThrownBy(() -> authService.login(loginRequest())).isInstanceOf(AccountLockedException.class);
+    }
+
+    private RefreshToken activeRefreshToken(User user, String rawToken) {
+        RefreshToken token = new RefreshToken();
+        token.setId(1L);
+        token.setUser(user);
+        token.setTokenHash(sha256Hex(rawToken));
+        token.setExpiresAt(LocalDateTime.now().plusDays(1));
+        token.setRevoked(false);
+        return token;
+    }
+
+    @Test
+    void refreshAccessToken_withValidToken_returnsNewAccessToken() {
+        User user = activeUser();
+        RefreshToken token = activeRefreshToken(user, "raw-refresh-token");
+        when(refreshTokenRepository.findByTokenHash(sha256Hex("raw-refresh-token"))).thenReturn(Optional.of(token));
+        when(jwtService.generateAccessToken(1L, "user01", List.of())).thenReturn("new-access-token");
+
+        AccessTokenResponse response = authService.refreshAccessToken("raw-refresh-token");
+
+        assertThat(response.getAccessToken()).isEqualTo("new-access-token");
+    }
+
+    @Test
+    void refreshAccessToken_whenTokenNotFound_throwsTokenInvalidException() {
+        when(refreshTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.refreshAccessToken("unknown-token"))
+                .isInstanceOf(TokenInvalidException.class);
+    }
+
+    @Test
+    void refreshAccessToken_whenCookieMissing_throwsTokenInvalidExceptionNotNullPointerException() {
+        assertThatThrownBy(() -> authService.refreshAccessToken(null)).isInstanceOf(TokenInvalidException.class);
+        verify(refreshTokenRepository, never()).findByTokenHash(any());
+    }
+
+    @Test
+    void refreshAccessToken_whenTokenRevoked_throwsTokenInvalidException() {
+        User user = activeUser();
+        RefreshToken token = activeRefreshToken(user, "raw-refresh-token");
+        token.setRevoked(true);
+        when(refreshTokenRepository.findByTokenHash(sha256Hex("raw-refresh-token"))).thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.refreshAccessToken("raw-refresh-token"))
+                .isInstanceOf(TokenInvalidException.class);
+    }
+
+    @Test
+    void refreshAccessToken_whenTokenExpired_throwsTokenExpiredException() {
+        User user = activeUser();
+        RefreshToken token = activeRefreshToken(user, "raw-refresh-token");
+        token.setExpiresAt(LocalDateTime.now().minusMinutes(1));
+        when(refreshTokenRepository.findByTokenHash(sha256Hex("raw-refresh-token"))).thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.refreshAccessToken("raw-refresh-token"))
+                .isInstanceOf(TokenExpiredException.class);
+    }
+
+    @Test
+    void logout_withTokenOwnedByCurrentUser_revokesToken() {
+        User user = activeUser();
+        RefreshToken token = activeRefreshToken(user, "raw-refresh-token");
+        when(refreshTokenRepository.findByTokenHash(sha256Hex("raw-refresh-token"))).thenReturn(Optional.of(token));
+
+        authService.logout(1L, "raw-refresh-token");
+
+        verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
+        assertThat(refreshTokenCaptor.getValue().isRevoked()).isTrue();
+    }
+
+    @Test
+    void logout_withNullCookie_doesNothing() {
+        authService.logout(1L, null);
+
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void logout_whenTokenBelongsToDifferentUser_doesNotRevoke() {
+        User user = activeUser();
+        RefreshToken token = activeRefreshToken(user, "raw-refresh-token");
+        when(refreshTokenRepository.findByTokenHash(sha256Hex("raw-refresh-token"))).thenReturn(Optional.of(token));
+
+        authService.logout(999L, "raw-refresh-token");
+
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    private ForgotPasswordRequest forgotPasswordRequest() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("user01@test.com");
+        return request;
+    }
+
+    @Test
+    void forgotPassword_whenEmailExists_createsPasswordResetToken() {
+        User user = activeUser();
+        when(userRepository.findByEmail("user01@test.com")).thenReturn(Optional.of(user));
+
+        authService.forgotPassword(forgotPasswordRequest());
+
+        verify(verificationTokenRepository).save(verificationTokenCaptor.capture());
+        assertThat(verificationTokenCaptor.getValue().getType()).isEqualTo(TokenType.PASSWORD_RESET);
+    }
+
+    @Test
+    void forgotPassword_whenEmailDoesNotExist_doesNotCreateToken() {
+        when(userRepository.findByEmail("user01@test.com")).thenReturn(Optional.empty());
+
+        authService.forgotPassword(forgotPasswordRequest());
+
+        verify(verificationTokenRepository, never()).save(any());
+    }
+
+    private VerificationToken activePasswordResetToken(User user, String rawToken) {
+        VerificationToken token = new VerificationToken();
+        token.setId(1L);
+        token.setUser(user);
+        token.setType(TokenType.PASSWORD_RESET);
+        token.setTokenHash(sha256Hex(rawToken));
+        token.setExpiresAt(LocalDateTime.now().plusMinutes(20));
+        return token;
+    }
+
+    private ResetPasswordRequest resetPasswordRequest(String token) {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setToken(token);
+        request.setNewPassword("NewPassw0rd1");
+        request.setConfirmNewPassword("NewPassw0rd1");
+        return request;
+    }
+
+    @Test
+    void resetPassword_withValidToken_updatesPasswordAndRevokesOldRefreshTokens() {
+        User user = activeUser();
+        VerificationToken token = activePasswordResetToken(user, "raw-reset-token");
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-reset-token"), TokenType.PASSWORD_RESET))
+                .thenReturn(Optional.of(token));
+        when(passwordEncoder.encode("NewPassw0rd1")).thenReturn("new-hashed-password");
+        RefreshToken oldToken = activeRefreshToken(user, "old-refresh-token");
+        when(refreshTokenRepository.findAllByUserIdAndRevokedFalse(1L)).thenReturn(List.of(oldToken));
+
+        authService.resetPassword(resetPasswordRequest("raw-reset-token"));
+
+        assertThat(user.getPasswordHash()).isEqualTo("new-hashed-password");
+        assertThat(token.getUsedAt()).isNotNull();
+        assertThat(oldToken.isRevoked()).isTrue();
+        verify(refreshTokenRepository).saveAll(List.of(oldToken));
+    }
+
+    @Test
+    void resetPassword_whenPasswordMismatch_throwsPasswordMismatchException() {
+        ResetPasswordRequest request = resetPasswordRequest("raw-reset-token");
+        request.setConfirmNewPassword("Different1");
+
+        assertThatThrownBy(() -> authService.resetPassword(request)).isInstanceOf(PasswordMismatchException.class);
+        verify(verificationTokenRepository, never()).findByTokenHashAndType(anyString(), any());
+    }
+
+    @Test
+    void resetPassword_whenTokenNotFound_throwsTokenInvalidException() {
+        when(verificationTokenRepository.findByTokenHashAndType(anyString(), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.resetPassword(resetPasswordRequest("unknown-token")))
+                .isInstanceOf(TokenInvalidException.class);
+    }
+
+    @Test
+    void resetPassword_whenTokenAlreadyUsed_throwsTokenAlreadyUsedException() {
+        User user = activeUser();
+        VerificationToken token = activePasswordResetToken(user, "raw-reset-token");
+        token.setUsedAt(LocalDateTime.now().minusMinutes(5));
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-reset-token"), TokenType.PASSWORD_RESET))
+                .thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.resetPassword(resetPasswordRequest("raw-reset-token")))
+                .isInstanceOf(TokenAlreadyUsedException.class);
+    }
+
+    @Test
+    void resetPassword_whenTokenExpired_throwsTokenExpiredException() {
+        User user = activeUser();
+        VerificationToken token = activePasswordResetToken(user, "raw-reset-token");
+        token.setExpiresAt(LocalDateTime.now().minusMinutes(1));
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-reset-token"), TokenType.PASSWORD_RESET))
+                .thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.resetPassword(resetPasswordRequest("raw-reset-token")))
+                .isInstanceOf(TokenExpiredException.class);
+    }
+
+    private VerificationToken activeEmailVerifyToken(User user, String rawToken) {
+        VerificationToken token = new VerificationToken();
+        token.setId(1L);
+        token.setUser(user);
+        token.setType(TokenType.EMAIL_VERIFY);
+        token.setTokenHash(sha256Hex(rawToken));
+        token.setExpiresAt(LocalDateTime.now().plusHours(24));
+        return token;
+    }
+
+    @Test
+    void verifyEmail_withValidToken_activatesUser() {
+        User user = activeUser();
+        user.setStatus(UserStatus.PENDING_VERIFICATION);
+        VerificationToken token = activeEmailVerifyToken(user, "raw-verify-token");
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-verify-token"), TokenType.EMAIL_VERIFY))
+                .thenReturn(Optional.of(token));
+
+        authService.verifyEmail("raw-verify-token");
+
+        assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
+        assertThat(token.getUsedAt()).isNotNull();
+    }
+
+    @Test
+    void verifyEmail_whenTokenNotFound_throwsTokenInvalidException() {
+        when(verificationTokenRepository.findByTokenHashAndType(anyString(), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.verifyEmail("unknown-token")).isInstanceOf(TokenInvalidException.class);
+    }
+
+    @Test
+    void verifyEmail_whenTokenNull_throwsTokenInvalidExceptionNotNullPointerException() {
+        assertThatThrownBy(() -> authService.verifyEmail(null)).isInstanceOf(TokenInvalidException.class);
+        verify(verificationTokenRepository, never()).findByTokenHashAndType(any(), any());
+    }
+
+    @Test
+    void verifyEmail_whenTokenAlreadyUsed_throwsTokenAlreadyUsedException() {
+        User user = activeUser();
+        VerificationToken token = activeEmailVerifyToken(user, "raw-verify-token");
+        token.setUsedAt(LocalDateTime.now().minusHours(1));
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-verify-token"), TokenType.EMAIL_VERIFY))
+                .thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.verifyEmail("raw-verify-token")).isInstanceOf(TokenAlreadyUsedException.class);
+    }
+
+    @Test
+    void verifyEmail_whenTokenExpired_throwsTokenExpiredException() {
+        User user = activeUser();
+        VerificationToken token = activeEmailVerifyToken(user, "raw-verify-token");
+        token.setExpiresAt(LocalDateTime.now().minusMinutes(1));
+        when(verificationTokenRepository.findByTokenHashAndType(sha256Hex("raw-verify-token"), TokenType.EMAIL_VERIFY))
+                .thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> authService.verifyEmail("raw-verify-token")).isInstanceOf(TokenExpiredException.class);
+    }
+
+    /** Tính SHA-256 hex y hệt AuthService.hashToken() để mock/assert theo giá trị đã hash. */
+    private static String sha256Hex(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(rawToken.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
