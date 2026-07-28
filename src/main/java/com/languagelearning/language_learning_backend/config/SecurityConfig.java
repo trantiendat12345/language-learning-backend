@@ -26,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * `.cors(Customizer.withDefaults())` tự lấy bean `CorsConfigurationSource` khai báo ở
  * `CorsConfig` — bắt buộc phải bật vì `/api/auth/login` set cookie refresh token httpOnly,
  * nếu không bật CORS đúng cách trình duyệt sẽ chặn cookie khi Frontend gọi từ origin khác.
+ * `/api/admin/**` bắt buộc `hasRole("ADMIN")` — MVP chỉ check Role (D7), chưa check
+ * permission chi tiết dù schema `role_permission` đã sẵn sàng cho việc đó sau này.
  */
 @Configuration
 @EnableWebSecurity
@@ -54,6 +56,10 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers("/api/auth/**")
                         .permitAll()
+                        .requestMatchers("/api/languages")
+                        .permitAll()
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
                         .anyRequest()
                         .authenticated())
                 .exceptionHandling(exception -> exception

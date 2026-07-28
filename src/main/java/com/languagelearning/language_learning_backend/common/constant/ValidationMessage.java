@@ -36,4 +36,12 @@ public final class ValidationMessage {
     public static final String COUNTRY_SIZE = "Quốc gia tối đa 100 ký tự";
     public static final String CURRENT_LEVEL_SIZE = "Trình độ tối đa 20 ký tự";
     public static final String BIRTHDAY_MUST_BE_PAST = "Ngày sinh phải là 1 ngày trong quá khứ";
+
+    // Language (Giai đoạn 3)
+    public static final String LANGUAGE_CODE_REQUIRED = "Code không được để trống";
+    public static final String LANGUAGE_CODE_SIZE = "Code tối đa 10 ký tự";
+    public static final String LANGUAGE_NAME_REQUIRED = "Tên ngôn ngữ không được để trống";
+    public static final String LANGUAGE_NAME_SIZE = "Tên ngôn ngữ tối đa 100 ký tự";
+    public static final String LANGUAGE_FLAG_ICON_URL_SIZE = "Flag icon URL tối đa 500 ký tự";
+    public static final String LANGUAGE_STATUS_REQUIRED = "Status không được để trống";
 }
