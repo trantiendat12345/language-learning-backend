@@ -20,4 +20,9 @@ public final class ValidationMessage {
     public static final String PASSWORD_PATTERN =
             "Password phải từ 8 ký tự trở lên, có ít nhất 1 chữ và 1 số";
     public static final String CONFIRM_PASSWORD_REQUIRED = "Confirm password không được để trống";
+
+    // Auth - Forgot/Reset Password, Verify Email (Giai đoạn 2)
+    public static final String TOKEN_REQUIRED = "Token không được để trống";
+    public static final String NEW_PASSWORD_REQUIRED = "Password mới không được để trống";
+    public static final String CONFIRM_NEW_PASSWORD_REQUIRED = "Confirm password mới không được để trống";
 }

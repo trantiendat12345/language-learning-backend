@@ -17,7 +17,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Cấu hình bảo mật đầy đủ bằng JWT (thay thế bản tối thiểu của Giai đoạn 1). Stateless
- * (không session), public cho `/api/auth/**` + Swagger, còn lại bắt buộc authenticated.
+ * (không session), public cho hầu hết `/api/auth/**` + Swagger, còn lại bắt buộc
+ * authenticated. Riêng `/api/auth/logout` bắt buộc `authenticated()` (khai báo TRƯỚC matcher
+ * `/api/auth/**` rộng hơn — Spring Security dùng rule khớp ĐẦU TIÊN, không phải rule cụ thể
+ * nhất) vì logout cần biết currentUserId để kiểm tra ownership Refresh Token trước khi revoke.
  * `JwtAuthenticationFilter` chạy trước `UsernamePasswordAuthenticationFilter` để đọc token
  * từ header Authorization trước khi Spring Security xử lý xác thực mặc định.
  * `.cors(Customizer.withDefaults())` tự lấy bean `CorsConfigurationSource` khai báo ở
@@ -47,6 +50,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers("/api/auth/logout")
+                        .authenticated()
                         .requestMatchers("/api/auth/**")
                         .permitAll()
                         .anyRequest()
