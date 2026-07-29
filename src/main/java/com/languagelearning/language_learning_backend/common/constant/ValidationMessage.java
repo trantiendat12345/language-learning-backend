@@ -64,4 +64,18 @@ public final class ValidationMessage {
     public static final String LESSON_AUDIO_URL_SIZE = "Audio URL tối đa 500 ký tự";
     public static final String LESSON_ESTIMATED_MINUTES_MIN = "Estimated minutes phải >= 0";
     public static final String LESSON_STATUS_REQUIRED = "Status không được để trống";
+
+    // Vocabulary (Giai đoạn 3)
+    public static final String VOCABULARY_LANGUAGE_ID_REQUIRED = "languageId không được để trống";
+    public static final String VOCABULARY_WORD_REQUIRED = "Từ vựng không được để trống";
+    public static final String VOCABULARY_WORD_SIZE = "Từ vựng tối đa 200 ký tự";
+    public static final String VOCABULARY_MEANING_REQUIRED = "Nghĩa không được để trống";
+    public static final String VOCABULARY_MEANING_SIZE = "Nghĩa tối đa 500 ký tự";
+    public static final String VOCABULARY_IPA_SIZE = "IPA tối đa 100 ký tự";
+    public static final String VOCABULARY_AUDIO_URL_SIZE = "Pronunciation audio URL tối đa 500 ký tự";
+    public static final String VOCABULARY_WORD_TYPE_SIZE = "Word type tối đa 30 ký tự";
+    public static final String VOCABULARY_IMAGE_URL_SIZE = "Image URL tối đa 500 ký tự";
+    public static final String VOCABULARY_DIFFICULTY_SIZE = "Difficulty tối đa 20 ký tự";
+    public static final String VOCABULARY_FREQUENCY_RANK_MIN = "Frequency rank phải >= 0";
+    public static final String VOCABULARY_STATUS_REQUIRED = "Status không được để trống";
 }
