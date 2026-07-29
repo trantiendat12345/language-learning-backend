@@ -78,4 +78,16 @@ public final class ValidationMessage {
     public static final String VOCABULARY_DIFFICULTY_SIZE = "Difficulty tối đa 20 ký tự";
     public static final String VOCABULARY_FREQUENCY_RANK_MIN = "Frequency rank phải >= 0";
     public static final String VOCABULARY_STATUS_REQUIRED = "Status không được để trống";
+
+    // Grammar / GrammarExample (Giai đoạn 3)
+    public static final String GRAMMAR_TITLE_REQUIRED = "Tiêu đề không được để trống";
+    public static final String GRAMMAR_TITLE_SIZE = "Tiêu đề tối đa 200 ký tự";
+    public static final String GRAMMAR_PATTERN_SIZE = "Pattern tối đa 255 ký tự";
+    public static final String GRAMMAR_DIFFICULTY_SIZE = "Difficulty tối đa 20 ký tự";
+    public static final String GRAMMAR_DISPLAY_ORDER_MIN = "Display order phải >= 0";
+    public static final String GRAMMAR_EXAMPLE_TEXT_REQUIRED = "Câu ví dụ không được để trống";
+
+    // LessonVocabulary (Giai đoạn 3)
+    public static final String LESSON_VOCABULARY_ID_REQUIRED = "vocabularyId không được để trống";
+    public static final String LESSON_VOCABULARY_DISPLAY_ORDER_MIN = "Display order phải >= 0";
 }
