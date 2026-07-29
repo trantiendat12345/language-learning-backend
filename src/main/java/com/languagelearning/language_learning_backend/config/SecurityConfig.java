@@ -6,6 +6,7 @@ import com.languagelearning.language_learning_backend.security.JwtAuthentication
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +29,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * nếu không bật CORS đúng cách trình duyệt sẽ chặn cookie khi Frontend gọi từ origin khác.
  * `/api/admin/**` bắt buộc `hasRole("ADMIN")` — MVP chỉ check Role (D7), chưa check
  * permission chi tiết dù schema `role_permission` đã sẵn sàng cho việc đó sau này.
+ * `GET /api/courses/**`, `/api/lessons/**` permitAll (scope theo HTTP method — các method
+ * khác như POST enroll/complete sau này sẽ tự rơi vào `anyRequest().authenticated()` mà
+ * không cần sửa lại matcher này).
  */
 @Configuration
 @EnableWebSecurity
@@ -57,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
                         .requestMatchers("/api/languages")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/lessons/**")
                         .permitAll()
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")

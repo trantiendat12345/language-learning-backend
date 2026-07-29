@@ -44,4 +44,24 @@ public final class ValidationMessage {
     public static final String LANGUAGE_NAME_SIZE = "Tên ngôn ngữ tối đa 100 ký tự";
     public static final String LANGUAGE_FLAG_ICON_URL_SIZE = "Flag icon URL tối đa 500 ký tự";
     public static final String LANGUAGE_STATUS_REQUIRED = "Status không được để trống";
+
+    // Course (Giai đoạn 3)
+    public static final String COURSE_LANGUAGE_ID_REQUIRED = "languageId không được để trống";
+    public static final String COURSE_TITLE_REQUIRED = "Tiêu đề không được để trống";
+    public static final String COURSE_TITLE_SIZE = "Tiêu đề tối đa 200 ký tự";
+    public static final String COURSE_SLUG_REQUIRED = "Slug không được để trống";
+    public static final String COURSE_SLUG_SIZE = "Slug tối đa 200 ký tự";
+    public static final String COURSE_SLUG_PATTERN = "Slug chỉ gồm chữ thường, số và dấu gạch ngang (vd english-beginner-a1)";
+    public static final String COURSE_THUMBNAIL_URL_SIZE = "Thumbnail URL tối đa 500 ký tự";
+    public static final String COURSE_DIFFICULTY_SIZE = "Difficulty tối đa 20 ký tự";
+    public static final String COURSE_ESTIMATED_MINUTES_MIN = "Estimated minutes phải >= 0";
+    public static final String COURSE_STATUS_REQUIRED = "Status không được để trống";
+
+    // Lesson (Giai đoạn 3)
+    public static final String LESSON_TITLE_REQUIRED = "Tiêu đề không được để trống";
+    public static final String LESSON_TITLE_SIZE = "Tiêu đề tối đa 200 ký tự";
+    public static final String LESSON_VIDEO_URL_SIZE = "Video URL tối đa 500 ký tự";
+    public static final String LESSON_AUDIO_URL_SIZE = "Audio URL tối đa 500 ký tự";
+    public static final String LESSON_ESTIMATED_MINUTES_MIN = "Estimated minutes phải >= 0";
+    public static final String LESSON_STATUS_REQUIRED = "Status không được để trống";
 }
