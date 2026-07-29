@@ -22,6 +22,7 @@ import com.languagelearning.language_learning_backend.lesson.mapper.LessonMapper
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonVocabularyRepository;
 import com.languagelearning.language_learning_backend.lesson.service.LessonService;
+import com.languagelearning.language_learning_backend.progress.repository.CourseEnrollmentRepository;
 import com.languagelearning.language_learning_backend.vocabulary.entity.Vocabulary;
 import com.languagelearning.language_learning_backend.vocabulary.repository.VocabularyRepository;
 import java.time.LocalDateTime;
@@ -44,6 +45,7 @@ public class LessonServiceImpl implements LessonService {
     private final GrammarRepository grammarRepository;
     private final GrammarExampleRepository grammarExampleRepository;
     private final GrammarMapper grammarMapper;
+    private final CourseEnrollmentRepository courseEnrollmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,13 +62,15 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     @Transactional(readOnly = true)
-    public LessonResponse getPublishedLessonById(Long id) {
+    public LessonResponse getPublishedLessonById(Long id, Long currentUserId) {
         Lesson lesson = findLessonOrThrow(id);
         if (lesson.getStatus() != LessonStatus.PUBLISHED || lesson.getCourse().getStatus() != CourseStatus.PUBLISHED) {
             // Không tiết lộ Lesson/Course DRAFT tồn tại - trả cùng lỗi với id không tồn tại.
             throw new ResourceNotFoundException();
         }
-        return toLessonResponse(lesson);
+        boolean enrolled = currentUserId != null
+                && courseEnrollmentRepository.existsByUserIdAndCourseId(currentUserId, lesson.getCourse().getId());
+        return enrolled ? toLessonResponse(lesson, true) : toPreviewLessonResponse(lesson);
     }
 
     @Override
@@ -83,7 +87,8 @@ public class LessonServiceImpl implements LessonService {
     @Override
     @Transactional(readOnly = true)
     public LessonResponse getLessonByIdForAdmin(Long id) {
-        return toLessonResponse(findLessonOrThrow(id));
+        // Admin luôn thấy đầy đủ - không gating theo Enroll (dùng endpoint riêng, không qua getPublishedLessonById).
+        return toLessonResponse(findLessonOrThrow(id), true);
     }
 
     @Override
@@ -100,7 +105,7 @@ public class LessonServiceImpl implements LessonService {
         lesson.setAudioUrl(request.getAudioUrl());
         lesson.setEstimatedMinutes(request.getEstimatedMinutes());
         Lesson saved = lessonRepository.save(lesson);
-        return lessonMapper.toResponse(saved, List.of(), List.of());
+        return lessonMapper.toResponse(saved, true, List.of(), List.of());
     }
 
     @Override
@@ -115,7 +120,7 @@ public class LessonServiceImpl implements LessonService {
         lesson.setEstimatedMinutes(request.getEstimatedMinutes());
         lesson.setStatus(request.getStatus());
         Lesson saved = lessonRepository.save(lesson);
-        return toLessonResponse(saved);
+        return toLessonResponse(saved, true);
     }
 
     @Override
@@ -157,7 +162,12 @@ public class LessonServiceImpl implements LessonService {
         return lessonRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
     }
 
-    private LessonResponse toLessonResponse(Lesson lesson) {
+    /** enrolled=false, không nhúng Vocabulary/Grammar - chỉ preview field gốc của Lesson. */
+    private LessonResponse toPreviewLessonResponse(Lesson lesson) {
+        return lessonMapper.toResponse(lesson, false, List.of(), List.of());
+    }
+
+    private LessonResponse toLessonResponse(Lesson lesson, boolean enrolled) {
         List<LessonVocabularyResponse> vocabularies = lessonVocabularyRepository
                 .findAllByLessonIdOrderByDisplayOrderAsc(lesson.getId())
                 .stream()
@@ -170,7 +180,7 @@ public class LessonServiceImpl implements LessonService {
                         grammar,
                         grammarMapper.toExampleResponseList(grammarExampleRepository.findAllByGrammarId(grammar.getId()))))
                 .toList();
-        return lessonMapper.toResponse(lesson, vocabularies, grammars);
+        return lessonMapper.toResponse(lesson, enrolled, vocabularies, grammars);
     }
 
     private LessonVocabularyResponse toLessonVocabularyResponse(LessonVocabulary lessonVocabulary) {

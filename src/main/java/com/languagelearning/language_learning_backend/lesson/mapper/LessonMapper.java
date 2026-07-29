@@ -13,9 +13,11 @@ import org.mapstruct.Mapping;
 public interface LessonMapper {
 
     @Mapping(target = "courseId", source = "lesson.course.id")
+    @Mapping(target = "enrolled", source = "enrolled")
     @Mapping(target = "vocabularies", source = "vocabularies")
     @Mapping(target = "grammars", source = "grammars")
-    LessonResponse toResponse(Lesson lesson, List<LessonVocabularyResponse> vocabularies, List<GrammarResponse> grammars);
+    LessonResponse toResponse(
+            Lesson lesson, boolean enrolled, List<LessonVocabularyResponse> vocabularies, List<GrammarResponse> grammars);
 
     LessonSummaryResponse toSummaryResponse(Lesson lesson);
 }

@@ -12,8 +12,12 @@ public interface LessonService {
     /** 404 nếu Course không tồn tại/không PUBLISHED; chỉ trả Lesson status=PUBLISHED. */
     List<LessonSummaryResponse> getPublishedLessonsByCourse(Long courseId);
 
-    /** 404 nếu Lesson hoặc Course cha không tồn tại/không PUBLISHED. */
-    LessonResponse getPublishedLessonById(Long id);
+    /**
+     * 404 nếu Lesson hoặc Course cha không tồn tại/không PUBLISHED. `currentUserId` null =
+     * chưa đăng nhập (luôn preview). Đã enroll Course chứa Lesson → trả đầy đủ
+     * Vocabulary/Grammar; chưa enroll → preview (2 field đó rỗng, `enrolled=false`).
+     */
+    LessonResponse getPublishedLessonById(Long id, Long currentUserId);
 
     List<LessonSummaryResponse> getLessonsByCourseForAdmin(Long courseId);
 

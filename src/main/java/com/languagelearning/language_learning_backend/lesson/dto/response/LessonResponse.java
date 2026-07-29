@@ -9,10 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Đầy đủ cho GET /api/lessons/{id}, kèm Vocabulary (qua LessonVocabulary, theo displayOrder)
- * và Grammar (đầy đủ, gồm example) gắn với Lesson. Chunk hiện tại CHƯA có `CourseEnrollment`
- * nên chưa phân biệt preview/đầy đủ theo trạng thái Enroll — trả nguyên vẹn nội dung cho mọi
- * request hợp lệ tới Lesson PUBLISHED, xem docs/PROJECT_OVERVIEW.md mục 13 phần giới hạn phạm vi.
+ * Đầy đủ cho GET /api/lessons/{id}. `enrolled=true` (đã enroll Course chứa Lesson này, hoặc
+ * gọi qua endpoint Admin) → `vocabularies`/`grammars` có đầy đủ nội dung; `enrolled=false`
+ * (chưa login hoặc chưa enroll) → 2 field đó rỗng (preview), các field còn lại của Lesson vẫn
+ * hiển thị bình thường. Field `enrolled` giúp FE phân biệt "preview vì chưa enroll" với
+ * "Lesson thật sự chưa có Vocabulary/Grammar nào" (2 field rỗng
+ * nhưng lý do khác nhau).
  */
 @Getter
 @Builder
@@ -29,6 +31,7 @@ public class LessonResponse {
     private String audioUrl;
     private Integer estimatedMinutes;
     private LessonStatus status;
+    private boolean enrolled;
     private List<LessonVocabularyResponse> vocabularies;
     private List<GrammarResponse> grammars;
 }

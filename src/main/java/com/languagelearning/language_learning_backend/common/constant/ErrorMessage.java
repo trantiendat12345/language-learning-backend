@@ -31,4 +31,7 @@ public final class ErrorMessage {
     public static final String AUTH_EMAIL_TAKEN = "Email đã tồn tại";
     public static final String AUTH_PASSWORD_MISMATCH = "Confirm password không khớp với password";
     public static final String AUTH_NEW_PASSWORD_SAME_AS_CURRENT = "Password mới không được trùng với password hiện tại";
+
+    // Course/Lesson Progress (Giai đoạn 3)
+    public static final String COURSE_NOT_ENROLLED = "Bạn chưa đăng ký khoá học này";
 }

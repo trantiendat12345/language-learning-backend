@@ -1,5 +1,6 @@
 package com.languagelearning.language_learning_backend.course.controller;
 
+import com.languagelearning.language_learning_backend.common.constant.CommonMessage;
 import com.languagelearning.language_learning_backend.common.dto.ApiResponse;
 import com.languagelearning.language_learning_backend.common.dto.PageResponse;
 import com.languagelearning.language_learning_backend.course.dto.response.CourseResponse;
@@ -7,17 +8,22 @@ import com.languagelearning.language_learning_backend.course.dto.response.Course
 import com.languagelearning.language_learning_backend.course.service.CourseService;
 import com.languagelearning.language_learning_backend.lesson.dto.response.LessonSummaryResponse;
 import com.languagelearning.language_learning_backend.lesson.service.LessonService;
+import com.languagelearning.language_learning_backend.progress.dto.response.CourseEnrollmentResponse;
+import com.languagelearning.language_learning_backend.progress.service.CourseEnrollmentService;
+import com.languagelearning.language_learning_backend.security.CustomUserDetails;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint public - permitAll trong SecurityConfig (chỉ GET). */
+/** `GET` public - permitAll trong SecurityConfig. `POST /{id}/enroll` protected (mặc định `anyRequest().authenticated()`, không phải GET nên không cần khai báo riêng). */
 @RestController
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
@@ -25,6 +31,7 @@ public class CourseController {
 
     private final CourseService courseService;
     private final LessonService lessonService;
+    private final CourseEnrollmentService courseEnrollmentService;
 
     @GetMapping
     public ApiResponse<PageResponse<CourseSummaryResponse>> getPublishedCourses(
@@ -43,5 +50,11 @@ public class CourseController {
     @GetMapping("/{courseId}/lessons")
     public ApiResponse<List<LessonSummaryResponse>> getLessonsByCourse(@PathVariable Long courseId) {
         return ApiResponse.success(lessonService.getPublishedLessonsByCourse(courseId));
+    }
+
+    @PostMapping("/{id}/enroll")
+    public ApiResponse<CourseEnrollmentResponse> enroll(
+            @PathVariable Long id, @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ApiResponse.success(CommonMessage.SUCCESS, courseEnrollmentService.enrollInCourse(id, currentUser.getUserId()));
     }
 }
