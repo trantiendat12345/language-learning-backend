@@ -27,6 +27,7 @@ import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.mapper.LessonMapper;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonVocabularyRepository;
+import com.languagelearning.language_learning_backend.progress.repository.CourseEnrollmentRepository;
 import com.languagelearning.language_learning_backend.vocabulary.entity.Vocabulary;
 import com.languagelearning.language_learning_backend.vocabulary.repository.VocabularyRepository;
 import java.util.List;
@@ -59,6 +60,9 @@ class LessonServiceImplTest {
     @Mock
     private GrammarExampleRepository grammarExampleRepository;
 
+    @Mock
+    private CourseEnrollmentRepository courseEnrollmentRepository;
+
     private LessonServiceImpl lessonService;
 
     @BeforeEach
@@ -73,7 +77,8 @@ class LessonServiceImplTest {
                 vocabularyRepository,
                 grammarRepository,
                 grammarExampleRepository,
-                grammarMapper);
+                grammarMapper,
+                courseEnrollmentRepository);
     }
 
     private Course publishedCourse() {
@@ -140,23 +145,53 @@ class LessonServiceImplTest {
     }
 
     @Test
-    void getPublishedLessonById_whenLessonAndCoursePublished_returnsResponseWithEmbeddedContent() {
+    void getPublishedLessonById_whenEnrolled_returnsFullContent() {
         Course course = publishedCourse();
         Lesson lesson = publishedLesson(course);
         when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
+        when(courseEnrollmentRepository.existsByUserIdAndCourseId(999L, 1L)).thenReturn(true);
         LessonVocabulary lessonVocabulary = new LessonVocabulary();
         lessonVocabulary.setVocabulary(vocabulary());
         lessonVocabulary.setDisplayOrder(1);
         when(lessonVocabularyRepository.findAllByLessonIdOrderByDisplayOrderAsc(10L)).thenReturn(List.of(lessonVocabulary));
         when(grammarRepository.findAllByLessonIdOrderByDisplayOrderAsc(10L)).thenReturn(List.of());
 
-        LessonResponse response = lessonService.getPublishedLessonById(10L);
+        LessonResponse response = lessonService.getPublishedLessonById(10L, 999L);
 
         assertThat(response.getTitle()).isEqualTo("Lesson 1");
         assertThat(response.getCourseId()).isEqualTo(1L);
+        assertThat(response.isEnrolled()).isTrue();
         assertThat(response.getVocabularies()).hasSize(1);
         assertThat(response.getVocabularies().get(0).getWord()).isEqualTo("family");
         assertThat(response.getGrammars()).isEmpty();
+    }
+
+    @Test
+    void getPublishedLessonById_whenNotEnrolled_returnsPreviewWithoutContent() {
+        Course course = publishedCourse();
+        Lesson lesson = publishedLesson(course);
+        when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
+        when(courseEnrollmentRepository.existsByUserIdAndCourseId(999L, 1L)).thenReturn(false);
+
+        LessonResponse response = lessonService.getPublishedLessonById(10L, 999L);
+
+        assertThat(response.getTitle()).isEqualTo("Lesson 1");
+        assertThat(response.isEnrolled()).isFalse();
+        assertThat(response.getVocabularies()).isEmpty();
+        assertThat(response.getGrammars()).isEmpty();
+    }
+
+    @Test
+    void getPublishedLessonById_whenAnonymous_returnsPreviewWithoutCheckingEnrollment() {
+        Course course = publishedCourse();
+        Lesson lesson = publishedLesson(course);
+        when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
+
+        LessonResponse response = lessonService.getPublishedLessonById(10L, null);
+
+        assertThat(response.isEnrolled()).isFalse();
+        assertThat(response.getVocabularies()).isEmpty();
+        verify(courseEnrollmentRepository, never()).existsByUserIdAndCourseId(any(), any());
     }
 
     @Test
@@ -166,7 +201,7 @@ class LessonServiceImplTest {
         lesson.setStatus(LessonStatus.DRAFT);
         when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
 
-        assertThatThrownBy(() -> lessonService.getPublishedLessonById(10L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> lessonService.getPublishedLessonById(10L, null)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -176,7 +211,7 @@ class LessonServiceImplTest {
         Lesson lesson = publishedLesson(course);
         when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
 
-        assertThatThrownBy(() -> lessonService.getPublishedLessonById(10L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> lessonService.getPublishedLessonById(10L, null)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
