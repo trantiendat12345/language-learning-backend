@@ -17,6 +17,7 @@ public final class ErrorCode {
     public static final String FORBIDDEN = "FORBIDDEN";
     public static final String DUPLICATE_RESOURCE = "DUPLICATE_RESOURCE";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
+    public static final String OWNERSHIP_VIOLATION = "OWNERSHIP_VIOLATION";
 
     // Auth-specific (Giai đoạn 2)
     public static final String AUTH_INVALID_CREDENTIALS = "AUTH_INVALID_CREDENTIALS";

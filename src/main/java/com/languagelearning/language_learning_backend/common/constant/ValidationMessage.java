@@ -110,4 +110,17 @@ public final class ValidationMessage {
     public static final String QUIZ_QUESTION_COUNT_MIN = "questionCount phải >= 1 (bỏ trống nếu muốn lấy Tất cả)";
     public static final String QUIZ_DURATION_SECONDS_MIN = "durationSeconds phải >= 0";
     public static final String QUIZ_ANSWER_QUESTION_ID_REQUIRED = "questionId không được để trống";
+
+    // Deck / DeckCard (Giai đoạn 5)
+    public static final String DECK_LANGUAGE_ID_REQUIRED = "languageId không được để trống";
+    public static final String DECK_TITLE_REQUIRED = "Tiêu đề không được để trống";
+    public static final String DECK_TITLE_SIZE = "Tiêu đề tối đa 200 ký tự";
+    public static final String DECK_COVER_IMAGE_URL_SIZE = "Cover image URL tối đa 500 ký tự";
+    public static final String DECK_VISIBILITY_REQUIRED = "Visibility không được để trống";
+    public static final String DECK_STATUS_REQUIRED = "Status không được để trống";
+    public static final String DECK_CARD_WORD_SIZE = "Từ vựng tối đa 200 ký tự";
+    public static final String DECK_CARD_MEANING_SIZE = "Nghĩa tối đa 500 ký tự";
+    public static final String DECK_CARD_IPA_SIZE = "IPA tối đa 100 ký tự";
+    public static final String DECK_CARD_IMAGE_URL_SIZE = "Image URL tối đa 500 ký tự";
+    public static final String DECK_CARD_DISPLAY_ORDER_MIN = "Display order phải >= 0";
 }

@@ -17,6 +17,7 @@ public final class ErrorMessage {
     public static final String FORBIDDEN = "Bạn không có quyền thực hiện thao tác này";
     public static final String DUPLICATE_RESOURCE = "Dữ liệu đã tồn tại";
     public static final String INTERNAL_ERROR = "Đã có lỗi xảy ra, vui lòng thử lại sau";
+    public static final String OWNERSHIP_VIOLATION = "Bạn không có quyền thao tác trên dữ liệu này";
 
     // Auth-specific (Giai đoạn 2) — message chung chung cho sai username/password, cố tình
     // giống hệt nhau để không tiết lộ username có tồn tại hay không (11_FRS_TC_AUTH.md).
