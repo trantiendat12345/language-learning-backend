@@ -123,4 +123,7 @@ public final class ValidationMessage {
     public static final String DECK_CARD_IPA_SIZE = "IPA tối đa 100 ký tự";
     public static final String DECK_CARD_IMAGE_URL_SIZE = "Image URL tối đa 500 ký tự";
     public static final String DECK_CARD_DISPLAY_ORDER_MIN = "Display order phải >= 0";
+
+    // Review / SRS (Giai đoạn 6)
+    public static final String REVIEW_RATING_REQUIRED = "rating không được để trống";
 }
