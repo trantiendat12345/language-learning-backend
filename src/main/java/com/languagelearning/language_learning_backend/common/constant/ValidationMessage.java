@@ -90,4 +90,24 @@ public final class ValidationMessage {
     // LessonVocabulary (Giai đoạn 3)
     public static final String LESSON_VOCABULARY_ID_REQUIRED = "vocabularyId không được để trống";
     public static final String LESSON_VOCABULARY_DISPLAY_ORDER_MIN = "Display order phải >= 0";
+
+    // Question / QuestionOption (Giai đoạn 4)
+    public static final String QUESTION_SOURCE_TYPE_REQUIRED = "sourceType không được để trống";
+    public static final String QUESTION_SOURCE_ID_REQUIRED = "sourceId không được để trống";
+    public static final String QUESTION_LANGUAGE_ID_REQUIRED = "languageId không được để trống";
+    public static final String QUESTION_TYPE_REQUIRED = "type không được để trống";
+    public static final String QUESTION_PROMPT_TEXT_SIZE = "Prompt text tối đa 2000 ký tự";
+    public static final String QUESTION_PROMPT_AUDIO_URL_SIZE = "Prompt audio URL tối đa 500 ký tự";
+    public static final String QUESTION_PROMPT_IMAGE_URL_SIZE = "Prompt image URL tối đa 500 ký tự";
+    public static final String QUESTION_DIFFICULTY_SIZE = "Difficulty tối đa 20 ký tự";
+    public static final String QUESTION_OPTION_TEXT_SIZE = "Option text tối đa 500 ký tự";
+    public static final String QUESTION_OPTION_IMAGE_URL_SIZE = "Option image URL tối đa 500 ký tự";
+    public static final String QUESTION_OPTION_DISPLAY_ORDER_MIN = "Display order phải >= 0";
+
+    // Quiz generate/submit (Giai đoạn 4)
+    public static final String QUIZ_SOURCE_TYPE_REQUIRED = "sourceType không được để trống";
+    public static final String QUIZ_SOURCE_ID_REQUIRED = "sourceId không được để trống";
+    public static final String QUIZ_QUESTION_COUNT_MIN = "questionCount phải >= 1 (bỏ trống nếu muốn lấy Tất cả)";
+    public static final String QUIZ_DURATION_SECONDS_MIN = "durationSeconds phải >= 0";
+    public static final String QUIZ_ANSWER_QUESTION_ID_REQUIRED = "questionId không được để trống";
 }

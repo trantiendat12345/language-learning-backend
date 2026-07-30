@@ -34,4 +34,7 @@ public final class ErrorMessage {
 
     // Course/Lesson Progress (Giai đoạn 3)
     public static final String COURSE_NOT_ENROLLED = "Bạn chưa đăng ký khoá học này";
+
+    // Quiz (Giai đoạn 4)
+    public static final String QUIZ_ANSWER_OUT_OF_SCOPE = "Có câu trả lời không thuộc bài Quiz này";
 }

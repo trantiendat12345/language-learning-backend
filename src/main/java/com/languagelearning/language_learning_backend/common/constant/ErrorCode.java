@@ -33,4 +33,7 @@ public final class ErrorCode {
 
     // Course/Lesson Progress (Giai đoạn 3)
     public static final String COURSE_NOT_ENROLLED = "COURSE_NOT_ENROLLED";
+
+    // Quiz (Giai đoạn 4)
+    public static final String QUIZ_ANSWER_OUT_OF_SCOPE = "QUIZ_ANSWER_OUT_OF_SCOPE";
 }
