@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -52,6 +53,22 @@ public class GlobalExceptionHandler {
                 .errorCode(ErrorCode.VALIDATION_ERROR)
                 .message(ErrorMessage.VALIDATION_ERROR)
                 .errors(fieldErrors)
+                .build();
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    /**
+     * Bắt lỗi parse body JSON (sai định dạng, giá trị enum không hợp lệ vd `"rating":"AMAZING"`,
+     * sai kiểu field...) xảy ra TRƯỚC khi Bean Validation kịp chạy — nếu không bắt riêng, request
+     * sai định dạng thông thường sẽ rơi xuống catch-all `Exception.class` bên dưới và biến thành
+     * 500 sai lệch (lỗi request, không phải lỗi server) thay vì 400 đúng bản chất.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .code(HttpStatus.BAD_REQUEST.value())
+                .errorCode(ErrorCode.BAD_REQUEST)
+                .message(ErrorMessage.BAD_REQUEST)
                 .build();
         return ResponseEntity.badRequest().body(body);
     }

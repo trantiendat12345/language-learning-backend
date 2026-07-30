@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -50,6 +51,18 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getErrors()).hasSize(1);
         assertThat(response.getBody().getErrors().get(0).getField()).isEqualTo("email");
         assertThat(response.getBody().getErrors().get(0).getMessage()).isEqualTo("Email không đúng định dạng");
+    }
+
+    @Test
+    void handleHttpMessageNotReadableException_returns400_notSwallowedByGenericHandler() {
+        HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+
+        ResponseEntity<ApiErrorResponse> response = handler.handleHttpMessageNotReadableException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).isEqualTo(ErrorMessage.BAD_REQUEST);
     }
 
     @Test
