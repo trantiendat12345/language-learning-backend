@@ -3,6 +3,7 @@ package com.languagelearning.language_learning_backend.progress.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,8 @@ import static org.mockito.Mockito.when;
 import com.languagelearning.language_learning_backend.course.entity.Course;
 import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
@@ -21,6 +24,7 @@ import com.languagelearning.language_learning_backend.progress.enums.LessonProgr
 import com.languagelearning.language_learning_backend.progress.exception.CourseNotEnrolledException;
 import com.languagelearning.language_learning_backend.progress.repository.CourseEnrollmentRepository;
 import com.languagelearning.language_learning_backend.progress.repository.LessonProgressRepository;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
 import java.util.List;
@@ -46,12 +50,23 @@ class LessonProgressServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private XpService xpService;
+
+    @Mock
+    private DailyActivityService dailyActivityService;
+
     private LessonProgressServiceImpl lessonProgressService;
 
     @BeforeEach
     void setUp() {
         lessonProgressService = new LessonProgressServiceImpl(
-                lessonProgressRepository, lessonRepository, courseEnrollmentRepository, userRepository);
+                lessonProgressRepository,
+                lessonRepository,
+                courseEnrollmentRepository,
+                userRepository,
+                xpService,
+                dailyActivityService);
     }
 
     private Course publishedCourse() {
@@ -99,6 +114,8 @@ class LessonProgressServiceImplTest {
         assertThat(response.getLessonProgressStatus()).isEqualTo(LessonProgressStatus.COMPLETED);
         assertThat(response.getCourseProgressPercent()).isEqualTo(50);
         assertThat(response.getCourseStatus()).isEqualTo(EnrollmentStatus.IN_PROGRESS);
+        verify(xpService).awardXp(100L, XpReason.LESSON_COMPLETED, 10, 10L);
+        verify(dailyActivityService).recordActivity(100L, 0, 0);
     }
 
     @Test
@@ -140,6 +157,8 @@ class LessonProgressServiceImplTest {
         assertThat(response.getCourseProgressPercent()).isEqualTo(100);
         verify(lessonProgressRepository, never()).save(any());
         verify(courseEnrollmentRepository, never()).save(any());
+        verify(xpService, never()).awardXp(any(), any(), anyInt(), any());
+        verify(dailyActivityService, never()).recordActivity(any(), anyInt(), anyInt());
     }
 
     @Test

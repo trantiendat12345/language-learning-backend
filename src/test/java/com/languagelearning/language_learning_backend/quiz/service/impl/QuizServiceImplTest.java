@@ -3,15 +3,20 @@ package com.languagelearning.language_learning_backend.quiz.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.languagelearning.language_learning_backend.course.entity.Course;
 import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.BadRequestException;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizAnswerRequest;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizGenerateRequest;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizSubmitRequest;
@@ -58,6 +63,12 @@ class QuizServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private XpService xpService;
+
+    @Mock
+    private DailyActivityService dailyActivityService;
+
     private QuizServiceImpl quizService;
 
     @BeforeEach
@@ -68,7 +79,9 @@ class QuizServiceImplTest {
                 quizAttemptRepository,
                 quizAttemptAnswerRepository,
                 lessonRepository,
-                userRepository);
+                userRepository,
+                xpService,
+                dailyActivityService);
     }
 
     private Lesson publishedLesson() {
@@ -210,9 +223,11 @@ class QuizServiceImplTest {
         assertThat(response.getCorrectAnswers()).isEqualTo(1);
         assertThat(response.getWrongAnswers()).isZero();
         assertThat(response.getAccuracy()).isEqualTo(100f);
-        assertThat(response.getXpEarned()).isZero();
+        assertThat(response.getXpEarned()).isEqualTo(5);
         assertThat(response.getAnswers().get(0).isCorrect()).isTrue();
         assertThat(response.getAnswers().get(0).getCorrectOptionId()).isEqualTo(1L);
+        verify(xpService).awardXp(eq(100L), eq(XpReason.QUIZ_COMPLETED), eq(5), any());
+        verify(dailyActivityService).recordActivity(100L, 1, 0);
     }
 
     @Test

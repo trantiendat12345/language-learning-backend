@@ -17,6 +17,7 @@ import com.languagelearning.language_learning_backend.user.dto.request.ChangePas
 import com.languagelearning.language_learning_backend.user.dto.request.UserUpdateRequest;
 import com.languagelearning.language_learning_backend.user.dto.response.UserResponse;
 import com.languagelearning.language_learning_backend.user.entity.User;
+import com.languagelearning.language_learning_backend.user.enums.DailyGoalType;
 import com.languagelearning.language_learning_backend.user.mapper.UserMapper;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
 import java.time.LocalDate;
@@ -87,6 +88,8 @@ class UserServiceImplTest {
         request.setGender("MALE");
         request.setCountry("Vietnam");
         request.setCurrentLevel("B1");
+        request.setDailyGoalType(DailyGoalType.TIME);
+        request.setDailyGoalValue(20);
         return request;
     }
 
@@ -101,6 +104,8 @@ class UserServiceImplTest {
         assertThat(response.getDisplayName()).isEqualTo("New Name");
         assertThat(response.getCountry()).isEqualTo("Vietnam");
         assertThat(response.getCurrentLevel()).isEqualTo("B1");
+        assertThat(response.getDailyGoalType()).isEqualTo(DailyGoalType.TIME);
+        assertThat(response.getDailyGoalValue()).isEqualTo(20);
         // Field không được phép sửa qua endpoint này (username/email) phải giữ nguyên.
         assertThat(response.getUsername()).isEqualTo("user01");
         assertThat(response.getEmail()).isEqualTo("user01@test.com");

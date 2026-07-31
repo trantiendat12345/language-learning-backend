@@ -3,10 +3,15 @@ package com.languagelearning.language_learning_backend.review.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.review.dto.request.ReviewSubmitRequest;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewSubmitResponse;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewTodayItemResponse;
@@ -44,12 +49,23 @@ class ReviewServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private XpService xpService;
+
+    @Mock
+    private DailyActivityService dailyActivityService;
+
     private ReviewServiceImpl reviewService;
 
     @BeforeEach
     void setUp() {
         reviewService = new ReviewServiceImpl(
-                userVocabularyProgressRepository, reviewLogRepository, vocabularyRepository, userRepository);
+                userVocabularyProgressRepository,
+                reviewLogRepository,
+                vocabularyRepository,
+                userRepository,
+                xpService,
+                dailyActivityService);
     }
 
     private User user() {
@@ -118,6 +134,9 @@ class ReviewServiceImplTest {
         assertThat(response.getNextReviewDate()).isEqualTo(LocalDate.now(java.time.ZoneId.of("UTC")).plusDays(1));
         assertThat(response.getMasteryLevel()).isEqualTo(MasteryLevel.LEARNING);
         verify(reviewLogRepository).save(any(ReviewLog.class));
+        verify(xpService).awardXp(100L, XpReason.REVIEW_DONE, 2, 50L);
+        verify(xpService).awardXp(100L, XpReason.VOCAB_LEARNED, 10, 50L);
+        verify(dailyActivityService).recordActivity(100L, 0, 1);
     }
 
     @Test
@@ -135,6 +154,9 @@ class ReviewServiceImplTest {
         assertThat(response.getIntervalDays()).isEqualTo(1);
         assertThat(response.getForgotCount()).isEqualTo(1);
         assertThat(response.getEaseFactor()).isEqualTo(2.3f, org.assertj.core.data.Offset.offset(0.001f));
+        verify(xpService).awardXp(100L, XpReason.REVIEW_DONE, 2, 50L);
+        verify(xpService, never()).awardXp(any(), eq(XpReason.VOCAB_LEARNED), any(Integer.class), any());
+        verify(dailyActivityService).recordActivity(100L, 0, 0);
     }
 
     @Test
