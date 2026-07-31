@@ -11,6 +11,9 @@ import static org.mockito.Mockito.when;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
 import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
 import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.review.dto.request.ReviewSubmitRequest;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewSubmitResponse;
@@ -55,6 +58,9 @@ class ReviewServiceImplTest {
     @Mock
     private DailyActivityService dailyActivityService;
 
+    @Mock
+    private ActivityHistoryService activityHistoryService;
+
     private ReviewServiceImpl reviewService;
 
     @BeforeEach
@@ -65,7 +71,8 @@ class ReviewServiceImplTest {
                 vocabularyRepository,
                 userRepository,
                 xpService,
-                dailyActivityService);
+                dailyActivityService,
+                activityHistoryService);
     }
 
     private User user() {
@@ -250,5 +257,6 @@ class ReviewServiceImplTest {
         reviewService.submitReview(50L, request(ReviewRating.EASY), 100L);
 
         verify(reviewLogRepository).save(any(ReviewLog.class));
+        verify(activityHistoryService).recordActivity(100L, ActivityTargetType.VOCABULARY, 50L, ActivityAction.REVIEWED);
     }
 }

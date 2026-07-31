@@ -13,6 +13,9 @@ import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
 import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
 import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
@@ -56,6 +59,9 @@ class LessonProgressServiceImplTest {
     @Mock
     private DailyActivityService dailyActivityService;
 
+    @Mock
+    private ActivityHistoryService activityHistoryService;
+
     private LessonProgressServiceImpl lessonProgressService;
 
     @BeforeEach
@@ -66,7 +72,8 @@ class LessonProgressServiceImplTest {
                 courseEnrollmentRepository,
                 userRepository,
                 xpService,
-                dailyActivityService);
+                dailyActivityService,
+                activityHistoryService);
     }
 
     private Course publishedCourse() {
@@ -116,6 +123,7 @@ class LessonProgressServiceImplTest {
         assertThat(response.getCourseStatus()).isEqualTo(EnrollmentStatus.IN_PROGRESS);
         verify(xpService).awardXp(100L, XpReason.LESSON_COMPLETED, 10, 10L);
         verify(dailyActivityService).recordActivity(100L, 0, 0);
+        verify(activityHistoryService).recordActivity(100L, ActivityTargetType.LESSON, 10L, ActivityAction.LEARNED);
     }
 
     @Test
@@ -159,6 +167,7 @@ class LessonProgressServiceImplTest {
         verify(courseEnrollmentRepository, never()).save(any());
         verify(xpService, never()).awardXp(any(), any(), anyInt(), any());
         verify(dailyActivityService, never()).recordActivity(any(), anyInt(), anyInt());
+        verify(activityHistoryService, never()).recordActivity(any(), any(), any(), any());
     }
 
     @Test

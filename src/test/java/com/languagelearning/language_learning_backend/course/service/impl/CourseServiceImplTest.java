@@ -16,6 +16,9 @@ import com.languagelearning.language_learning_backend.course.mapper.CourseMapper
 import com.languagelearning.language_learning_backend.course.repository.CourseRepository;
 import com.languagelearning.language_learning_backend.exception.DuplicateResourceException;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.language.entity.Language;
 import com.languagelearning.language_learning_backend.language.repository.LanguageRepository;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
@@ -47,6 +50,9 @@ class CourseServiceImplTest {
     @Mock
     private LessonRepository lessonRepository;
 
+    @Mock
+    private ActivityHistoryService activityHistoryService;
+
     private CourseServiceImpl courseService;
 
     @BeforeEach
@@ -54,7 +60,7 @@ class CourseServiceImplTest {
         CourseMapper courseMapper = Mappers.getMapper(CourseMapper.class);
         LessonMapper lessonMapper = Mappers.getMapper(LessonMapper.class);
         courseService = new CourseServiceImpl(
-                courseRepository, languageRepository, lessonRepository, courseMapper, lessonMapper);
+                courseRepository, languageRepository, lessonRepository, courseMapper, lessonMapper, activityHistoryService);
     }
 
     private Language language() {
@@ -96,10 +102,22 @@ class CourseServiceImplTest {
         when(lessonRepository.findAllByCourseIdAndStatusOrderByDisplayOrderAsc(1L, LessonStatus.PUBLISHED))
                 .thenReturn(List.of(lesson));
 
-        CourseResponse response = courseService.getPublishedCourseById(1L);
+        CourseResponse response = courseService.getPublishedCourseById(1L, 100L);
 
         assertThat(response.getLessons()).hasSize(1);
         assertThat(response.getLessons().get(0).getTitle()).isEqualTo("Lesson 1");
+        verify(activityHistoryService).recordActivity(100L, ActivityTargetType.COURSE, 1L, ActivityAction.VIEWED);
+    }
+
+    @Test
+    void getPublishedCourseById_whenAnonymous_doesNotRecordActivity() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(publishedCourse()));
+        when(lessonRepository.findAllByCourseIdAndStatusOrderByDisplayOrderAsc(1L, LessonStatus.PUBLISHED))
+                .thenReturn(List.of());
+
+        courseService.getPublishedCourseById(1L, null);
+
+        verify(activityHistoryService, never()).recordActivity(any(), any(), any(), any());
     }
 
     @Test
@@ -108,14 +126,14 @@ class CourseServiceImplTest {
         course.setStatus(CourseStatus.DRAFT);
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
-        assertThatThrownBy(() -> courseService.getPublishedCourseById(1L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> courseService.getPublishedCourseById(1L, 100L)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void getPublishedCourseById_whenNotFound_throwsResourceNotFoundException() {
         when(courseRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> courseService.getPublishedCourseById(1L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> courseService.getPublishedCourseById(1L, 100L)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
