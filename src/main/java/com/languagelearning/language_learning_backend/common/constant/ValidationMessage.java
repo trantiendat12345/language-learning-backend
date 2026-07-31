@@ -130,4 +130,8 @@ public final class ValidationMessage {
     // User - Daily Goal (Giai đoạn 7, đặc tả gốc thuộc Giai đoạn 2 mục 1.4)
     public static final String DAILY_GOAL_TYPE_REQUIRED = "dailyGoalType không được để trống";
     public static final String DAILY_GOAL_VALUE_MIN = "dailyGoalValue phải >= 1";
+
+    // Favorite (Giai đoạn 8)
+    public static final String FAVORITE_TARGET_TYPE_REQUIRED = "targetType không được để trống";
+    public static final String FAVORITE_TARGET_ID_REQUIRED = "targetId không được để trống";
 }
