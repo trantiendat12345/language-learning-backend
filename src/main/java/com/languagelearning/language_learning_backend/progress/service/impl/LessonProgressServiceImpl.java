@@ -2,6 +2,8 @@ package com.languagelearning.language_learning_backend.progress.service.impl;
 
 import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
@@ -13,6 +15,7 @@ import com.languagelearning.language_learning_backend.progress.enums.LessonProgr
 import com.languagelearning.language_learning_backend.progress.exception.CourseNotEnrolledException;
 import com.languagelearning.language_learning_backend.progress.repository.CourseEnrollmentRepository;
 import com.languagelearning.language_learning_backend.progress.repository.LessonProgressRepository;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.progress.service.LessonProgressService;
 import com.languagelearning.language_learning_backend.user.entity.User;
 import com.languagelearning.language_learning_backend.user.repository.UserRepository;
@@ -26,10 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class LessonProgressServiceImpl implements LessonProgressService {
 
+    /** Số XP thưởng khi hoàn thành 1 Lesson - quyết định chốt khi code (FRS chỉ liệt kê reason, không cho số chính xác, xem docs/testing/04_BUSINESS_RULES_GLOBAL.md mục 1). */
+    private static final int LESSON_COMPLETED_XP = 10;
+
     private final LessonProgressRepository lessonProgressRepository;
     private final LessonRepository lessonRepository;
     private final CourseEnrollmentRepository courseEnrollmentRepository;
     private final UserRepository userRepository;
+    private final XpService xpService;
+    private final DailyActivityService dailyActivityService;
 
     @Override
     @Transactional
@@ -50,12 +58,16 @@ public class LessonProgressServiceImpl implements LessonProgressService {
             progress.setLesson(lesson);
         }
 
-        // Idempotent - hoàn thành lại Lesson đã COMPLETED không cộng thêm gì (XP đợi Giai đoạn 7).
+        // Idempotent - hoàn thành lại Lesson đã COMPLETED không cộng thêm gì (chỉ lần đầu mới cộng XP/hoạt động).
         if (progress.getStatus() != LessonProgressStatus.COMPLETED) {
             progress.setStatus(LessonProgressStatus.COMPLETED);
             progress.setCompletedAt(LocalDateTime.now());
             lessonProgressRepository.save(progress);
             recalculateCourseProgress(enrollment, courseId, userId);
+
+            xpService.awardXp(userId, XpReason.LESSON_COMPLETED, LESSON_COMPLETED_XP, lessonId);
+            int studyMinutesDelta = lesson.getEstimatedMinutes() == null ? 0 : lesson.getEstimatedMinutes();
+            dailyActivityService.recordActivity(userId, studyMinutesDelta, 0);
         }
 
         return LessonCompleteResponse.builder()

@@ -1,6 +1,9 @@
 package com.languagelearning.language_learning_backend.review.service.impl;
 
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.review.dto.request.ReviewSubmitRequest;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewSubmitResponse;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewTodayItemResponse;
@@ -19,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,10 +43,17 @@ public class ReviewServiceImpl implements ReviewService {
     private static final int FIRST_SUCCESS_INTERVAL_DAYS = 1;
     private static final int SECOND_SUCCESS_INTERVAL_DAYS = 6;
 
+    /** Số XP thưởng khi học 1 từ mới lần đầu tiên - quyết định chốt khi code, xem docs/testing/04_BUSINESS_RULES_GLOBAL.md mục 1. */
+    private static final int VOCAB_LEARNED_XP = 10;
+    /** Số XP thưởng mỗi lần review (kể cả review lại từ cũ) - quyết định chốt khi code. */
+    private static final int REVIEW_DONE_XP = 2;
+
     private final UserVocabularyProgressRepository userVocabularyProgressRepository;
     private final ReviewLogRepository reviewLogRepository;
     private final VocabularyRepository vocabularyRepository;
     private final UserRepository userRepository;
+    private final XpService xpService;
+    private final DailyActivityService dailyActivityService;
 
     @Override
     @Transactional(readOnly = true)
@@ -62,9 +73,10 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(userId).orElseThrow(ResourceNotFoundException::new);
         LocalDate today = LocalDate.now(ZoneId.of(user.getTimezone()));
 
-        UserVocabularyProgress progress = userVocabularyProgressRepository
-                .findByUserIdAndVocabularyId(userId, vocabularyId)
-                .orElseGet(() -> createInitialProgress(user, vocabulary));
+        Optional<UserVocabularyProgress> existingProgress =
+                userVocabularyProgressRepository.findByUserIdAndVocabularyId(userId, vocabularyId);
+        boolean isFirstTimeLearning = existingProgress.isEmpty();
+        UserVocabularyProgress progress = existingProgress.orElseGet(() -> createInitialProgress(user, vocabulary));
 
         applyRating(progress, request.getRating(), today);
         progress = userVocabularyProgressRepository.save(progress);
@@ -76,8 +88,11 @@ public class ReviewServiceImpl implements ReviewService {
         log.setReviewedAt(LocalDateTime.now());
         reviewLogRepository.save(log);
 
-        // XP (reason=REVIEW_DONE) + UserDailyActivity đợi hạ tầng D8/XpLog ở Giai đoạn 7,
-        // giống Lesson complete (Giai đoạn 3) và Quiz submit (Giai đoạn 4).
+        xpService.awardXp(userId, XpReason.REVIEW_DONE, REVIEW_DONE_XP, vocabularyId);
+        if (isFirstTimeLearning) {
+            xpService.awardXp(userId, XpReason.VOCAB_LEARNED, VOCAB_LEARNED_XP, vocabularyId);
+        }
+        dailyActivityService.recordActivity(userId, 0, isFirstTimeLearning ? 1 : 0);
 
         return toSubmitResponse(progress);
     }

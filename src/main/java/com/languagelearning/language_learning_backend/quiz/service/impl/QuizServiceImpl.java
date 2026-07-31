@@ -4,9 +4,12 @@ import com.languagelearning.language_learning_backend.common.dto.PageResponse;
 import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.BadRequestException;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
+import com.languagelearning.language_learning_backend.gamification.service.XpService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
+import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizAnswerRequest;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizGenerateRequest;
 import com.languagelearning.language_learning_backend.quiz.dto.request.QuizSubmitRequest;
@@ -53,12 +56,17 @@ public class QuizServiceImpl implements QuizService {
     private static final Set<QuestionType> OPTION_BASED_TYPES =
             EnumSet.of(QuestionType.MULTIPLE_CHOICE, QuestionType.IMAGE_CHOICE, QuestionType.AUDIO_CHOICE);
 
+    /** Số XP thưởng mỗi lần nộp Quiz (kể cả làm lại) - quyết định chốt khi code, xem docs/testing/04_BUSINESS_RULES_GLOBAL.md mục 1. */
+    private static final int QUIZ_COMPLETED_XP = 5;
+
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository questionOptionRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final QuizAttemptAnswerRepository quizAttemptAnswerRepository;
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
+    private final XpService xpService;
+    private final DailyActivityService dailyActivityService;
 
     @Override
     @Transactional(readOnly = true)
@@ -148,11 +156,16 @@ public class QuizServiceImpl implements QuizService {
         attempt.setAccuracy(accuracy);
         // Chưa có công thức score riêng biệt với accuracy (vd trọng số theo difficulty) - để dành khi cần.
         attempt.setScore(accuracy);
-        // XP thật (cộng User.xp + ghi XpLog cùng transaction - CLAUDE.md #9) đợi hạ tầng D8 ở Giai đoạn 7.
-        attempt.setXpEarned(0);
+        // Mỗi lần nộp Quiz (kể cả làm lại) đều cộng XP - khác Lesson complete chỉ cộng lần đầu.
+        attempt.setXpEarned(QUIZ_COMPLETED_XP);
         attempt = quizAttemptRepository.save(attempt);
 
         List<QuizAttemptAnswer> savedAnswers = saveAnswers(attempt, gradedAnswers);
+
+        xpService.awardXp(userId, XpReason.QUIZ_COMPLETED, QUIZ_COMPLETED_XP, attempt.getId());
+        int studyMinutesDelta = Math.round(request.getDurationSeconds() / 60f);
+        dailyActivityService.recordActivity(userId, studyMinutesDelta, 0);
+
         return toQuizAttemptResponse(attempt, savedAnswers, optionsByQuestion);
     }
 

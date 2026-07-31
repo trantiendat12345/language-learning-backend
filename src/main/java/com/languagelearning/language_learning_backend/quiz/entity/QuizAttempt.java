@@ -19,8 +19,8 @@ import lombok.Setter;
  * 1 lần làm Quiz (D5 — không có entity Quiz tĩnh, kết quả mỗi lần generate+làm bài lưu vào
  * đây). Kế thừa BaseEntity — bản chất là dữ liệu log/transaction (append-only, không sửa/xoá
  * qua API thông thường), giống ReviewLog trong D9, dù D9 không liệt kê tên rõ QuizAttempt.
- * `xpEarned` luôn = 0 ở chunk hiện tại — cộng XP thật cần `XpLog`/D8, hoãn đúng lịch Giai
- * đoạn 7 giống Lesson complete, xem QuizServiceImpl.
+ * `xpEarned` (Giai đoạn 7) cộng đúng 1 lần mỗi lần nộp bài, kể cả làm lại (khác Lesson complete
+ * chỉ cộng lần đầu) — xem QuizServiceImpl/gamification/service/XpService.
  */
 @Entity
 @Table(name = "quiz_attempt")
