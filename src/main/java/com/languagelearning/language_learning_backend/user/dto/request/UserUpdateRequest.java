@@ -1,6 +1,9 @@
 package com.languagelearning.language_learning_backend.user.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.user.enums.DailyGoalType;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
@@ -9,7 +12,7 @@ import lombok.Setter;
 
 /**
  * Dữ liệu client gửi lên khi sửa hồ sơ cá nhân (PUT /api/users/me). Chỉ gồm các field được
- * phép tự sửa theo docs/testing/12_FRS_TC_USER_PROFILE.md mục 1.2 — cố tình KHÔNG có
+ * phép tự sửa theo docs/testing/12_FRS_TC_USER_PROFILE.md mục 1.2 + 1.4 — cố tình KHÔNG có
  * username/email/password/xp/coin/role/status để client không thể gửi lên đổi các field này
  * dù có cố tình nhét thêm vào JSON (Jackson bỏ qua field không khai báo trong DTO).
  */
@@ -34,4 +37,10 @@ public class UserUpdateRequest {
 
     @Size(max = 20, message = ValidationMessage.CURRENT_LEVEL_SIZE)
     private String currentLevel;
+
+    @NotNull(message = ValidationMessage.DAILY_GOAL_TYPE_REQUIRED)
+    private DailyGoalType dailyGoalType;
+
+    @Min(value = 1, message = ValidationMessage.DAILY_GOAL_VALUE_MIN)
+    private int dailyGoalValue;
 }

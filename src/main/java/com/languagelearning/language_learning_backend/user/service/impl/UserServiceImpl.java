@@ -53,6 +53,8 @@ public class UserServiceImpl implements UserService {
         user.setGender(request.getGender());
         user.setCountry(request.getCountry());
         user.setCurrentLevel(request.getCurrentLevel());
+        user.setDailyGoalType(request.getDailyGoalType());
+        user.setDailyGoalValue(request.getDailyGoalValue());
         return userMapper.toResponse(userRepository.save(user));
     }
 

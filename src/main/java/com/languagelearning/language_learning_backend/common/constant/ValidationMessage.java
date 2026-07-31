@@ -126,4 +126,8 @@ public final class ValidationMessage {
 
     // Review / SRS (Giai đoạn 6)
     public static final String REVIEW_RATING_REQUIRED = "rating không được để trống";
+
+    // User - Daily Goal (Giai đoạn 7, đặc tả gốc thuộc Giai đoạn 2 mục 1.4)
+    public static final String DAILY_GOAL_TYPE_REQUIRED = "dailyGoalType không được để trống";
+    public static final String DAILY_GOAL_VALUE_MIN = "dailyGoalValue phải >= 1";
 }

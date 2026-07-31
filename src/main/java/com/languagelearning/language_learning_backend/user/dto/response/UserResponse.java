@@ -1,5 +1,6 @@
 package com.languagelearning.language_learning_backend.user.dto.response;
 
+import com.languagelearning.language_learning_backend.user.enums.DailyGoalType;
 import com.languagelearning.language_learning_backend.user.enums.UserStatus;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -31,5 +32,7 @@ public class UserResponse {
     private int longestStreak;
     private int coin;
     private String timezone;
+    private DailyGoalType dailyGoalType;
+    private int dailyGoalValue;
     private UserStatus status;
 }
