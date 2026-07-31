@@ -11,4 +11,7 @@ public interface LessonProgressRepository extends JpaRepository<LessonProgress, 
     Optional<LessonProgress> findByUserIdAndLessonId(Long userId, Long lessonId);
 
     long countByUserIdAndStatusAndLessonIdIn(Long userId, LessonProgressStatus status, List<Long> lessonIds);
+
+    /** Dùng cho "Continue Learning" ở Progress Dashboard - tìm Lesson PUBLISHED đầu tiên chưa COMPLETED. */
+    List<LessonProgress> findAllByUserIdAndLessonIdInAndStatus(Long userId, List<Long> lessonIds, LessonProgressStatus status);
 }
