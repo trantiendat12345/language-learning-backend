@@ -13,6 +13,9 @@ import com.languagelearning.language_learning_backend.course.repository.CourseSp
 import com.languagelearning.language_learning_backend.course.service.CourseService;
 import com.languagelearning.language_learning_backend.exception.DuplicateResourceException;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.language.entity.Language;
 import com.languagelearning.language_learning_backend.language.repository.LanguageRepository;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
@@ -39,6 +42,7 @@ public class CourseServiceImpl implements CourseService {
     private final LessonRepository lessonRepository;
     private final CourseMapper courseMapper;
     private final LessonMapper lessonMapper;
+    private final ActivityHistoryService activityHistoryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,8 +58,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public CourseResponse getPublishedCourseById(Long id) {
+    @Transactional
+    public CourseResponse getPublishedCourseById(Long id, Long currentUserId) {
         Course course = courseRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
         if (course.getStatus() != CourseStatus.PUBLISHED) {
             // Không tiết lộ Course DRAFT/ARCHIVED tồn tại - trả cùng lỗi với id không tồn tại.
@@ -63,6 +67,11 @@ public class CourseServiceImpl implements CourseService {
         }
         List<Lesson> lessons = lessonRepository.findAllByCourseIdAndStatusOrderByDisplayOrderAsc(
                 id, LessonStatus.PUBLISHED);
+
+        if (currentUserId != null) {
+            activityHistoryService.recordActivity(currentUserId, ActivityTargetType.COURSE, id, ActivityAction.VIEWED);
+        }
+
         return toCourseResponse(course, lessons);
     }
 

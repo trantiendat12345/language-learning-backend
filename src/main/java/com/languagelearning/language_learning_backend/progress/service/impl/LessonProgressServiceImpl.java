@@ -4,6 +4,9 @@ import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
 import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
 import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.lesson.entity.Lesson;
 import com.languagelearning.language_learning_backend.lesson.enums.LessonStatus;
 import com.languagelearning.language_learning_backend.lesson.repository.LessonRepository;
@@ -38,6 +41,7 @@ public class LessonProgressServiceImpl implements LessonProgressService {
     private final UserRepository userRepository;
     private final XpService xpService;
     private final DailyActivityService dailyActivityService;
+    private final ActivityHistoryService activityHistoryService;
 
     @Override
     @Transactional
@@ -68,6 +72,7 @@ public class LessonProgressServiceImpl implements LessonProgressService {
             xpService.awardXp(userId, XpReason.LESSON_COMPLETED, LESSON_COMPLETED_XP, lessonId);
             int studyMinutesDelta = lesson.getEstimatedMinutes() == null ? 0 : lesson.getEstimatedMinutes();
             dailyActivityService.recordActivity(userId, studyMinutesDelta, 0);
+            activityHistoryService.recordActivity(userId, ActivityTargetType.LESSON, lessonId, ActivityAction.LEARNED);
         }
 
         return LessonCompleteResponse.builder()

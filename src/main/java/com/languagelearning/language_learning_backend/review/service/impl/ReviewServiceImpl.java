@@ -3,6 +3,9 @@ package com.languagelearning.language_learning_backend.review.service.impl;
 import com.languagelearning.language_learning_backend.exception.ResourceNotFoundException;
 import com.languagelearning.language_learning_backend.gamification.enums.XpReason;
 import com.languagelearning.language_learning_backend.gamification.service.XpService;
+import com.languagelearning.language_learning_backend.history.enums.ActivityAction;
+import com.languagelearning.language_learning_backend.history.enums.ActivityTargetType;
+import com.languagelearning.language_learning_backend.history.service.ActivityHistoryService;
 import com.languagelearning.language_learning_backend.progress.service.DailyActivityService;
 import com.languagelearning.language_learning_backend.review.dto.request.ReviewSubmitRequest;
 import com.languagelearning.language_learning_backend.review.dto.response.ReviewSubmitResponse;
@@ -54,6 +57,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final XpService xpService;
     private final DailyActivityService dailyActivityService;
+    private final ActivityHistoryService activityHistoryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,6 +97,7 @@ public class ReviewServiceImpl implements ReviewService {
             xpService.awardXp(userId, XpReason.VOCAB_LEARNED, VOCAB_LEARNED_XP, vocabularyId);
         }
         dailyActivityService.recordActivity(userId, 0, isFirstTimeLearning ? 1 : 0);
+        activityHistoryService.recordActivity(userId, ActivityTargetType.VOCABULARY, vocabularyId, ActivityAction.REVIEWED);
 
         return toSubmitResponse(progress);
     }

@@ -13,8 +13,11 @@ public interface CourseService {
     PageResponse<CourseSummaryResponse> getPublishedCourses(
             Long languageId, String difficulty, String keyword, Pageable pageable);
 
-    /** 404 nếu không tồn tại HOẶC không PUBLISHED — không tiết lộ Course DRAFT tồn tại. */
-    CourseResponse getPublishedCourseById(Long id);
+    /**
+     * 404 nếu không tồn tại HOẶC không PUBLISHED — không tiết lộ Course DRAFT tồn tại.
+     * currentUserId nullable (route public) — ghi ActivityHistory(VIEWED) nếu đã đăng nhập.
+     */
+    CourseResponse getPublishedCourseById(Long id, Long currentUserId);
 
     PageResponse<CourseSummaryResponse> getAllCoursesForAdmin(Pageable pageable);
 

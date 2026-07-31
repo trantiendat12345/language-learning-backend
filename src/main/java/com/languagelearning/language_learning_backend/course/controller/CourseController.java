@@ -43,8 +43,10 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<CourseResponse> getCourseById(@PathVariable Long id) {
-        return ApiResponse.success(courseService.getPublishedCourseById(id));
+    public ApiResponse<CourseResponse> getCourseById(
+            @PathVariable Long id, @AuthenticationPrincipal CustomUserDetails currentUser) {
+        Long currentUserId = currentUser == null ? null : currentUser.getUserId();
+        return ApiResponse.success(courseService.getPublishedCourseById(id, currentUserId));
     }
 
     @GetMapping("/{courseId}/lessons")
