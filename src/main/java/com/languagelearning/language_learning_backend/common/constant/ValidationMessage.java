@@ -134,4 +134,10 @@ public final class ValidationMessage {
     // Favorite (Giai đoạn 8)
     public static final String FAVORITE_TARGET_TYPE_REQUIRED = "targetType không được để trống";
     public static final String FAVORITE_TARGET_ID_REQUIRED = "targetId không được để trống";
+
+    // StudyReminder (Giai đoạn 8)
+    public static final String STUDY_REMINDER_TYPE_REQUIRED = "type không được để trống";
+    public static final String STUDY_REMINDER_TIME_REQUIRED = "reminderTime không được để trống";
+    public static final String STUDY_REMINDER_DAYS_OF_WEEK_REQUIRED = "daysOfWeek không được để trống";
+    public static final String STUDY_REMINDER_CHANNEL_REQUIRED = "channel không được để trống";
 }
