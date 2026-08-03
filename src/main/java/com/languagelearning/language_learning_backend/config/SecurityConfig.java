@@ -29,8 +29,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * nếu không bật CORS đúng cách trình duyệt sẽ chặn cookie khi Frontend gọi từ origin khác.
  * `/api/admin/**` bắt buộc `hasRole("ADMIN")` — MVP chỉ check Role (D7), chưa check
  * permission chi tiết dù schema `role_permission` đã sẵn sàng cho việc đó sau này.
- * `GET /api/courses/**`, `/api/lessons/**`, `/api/vocabularies/**`, `/api/decks/**` permitAll
- * (scope theo HTTP method — các method khác như POST enroll/complete sau này sẽ tự rơi vào
+ * `GET /api/courses/**`, `/api/lessons/**`, `/api/vocabularies/**`, `/api/decks/**`,
+ * `/api/search` permitAll (scope theo HTTP method — các method khác như POST enroll/complete
+ * sau này sẽ tự rơi vào
  * `anyRequest().authenticated()` mà không cần sửa lại matcher này). Riêng `GET /api/decks/mine`
  * bắt buộc `authenticated()` (khai báo TRƯỚC matcher GET rộng hơn ở trên, cùng lý do
  * `/api/auth/logout`) vì đây là danh sách Deck của chính currentUser, không phải public search.
@@ -71,7 +72,8 @@ public class SecurityConfig {
                                 "/api/courses/**",
                                 "/api/lessons/**",
                                 "/api/vocabularies/**",
-                                "/api/decks/**")
+                                "/api/decks/**",
+                                "/api/search")
                         .permitAll()
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
