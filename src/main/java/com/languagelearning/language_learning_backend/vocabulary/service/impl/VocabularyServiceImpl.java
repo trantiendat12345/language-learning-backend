@@ -54,10 +54,12 @@ public class VocabularyServiceImpl implements VocabularyService {
         return vocabularyMapper.toResponse(vocabulary);
     }
 
+    /** Chỉ trả Vocabulary hệ thống (ownerId=null) - Admin không quản lý Vocabulary custom của User qua màn hình này (D1). */
     @Override
     @Transactional(readOnly = true)
     public PageResponse<VocabularySummaryResponse> getAllVocabulariesForAdmin(Pageable pageable) {
-        return PageResponse.from(vocabularyRepository.findAll(pageable).map(vocabularyMapper::toSummaryResponse));
+        Specification<Vocabulary> spec = Specification.allOf(VocabularySpecification.isSystemWord());
+        return PageResponse.from(vocabularyRepository.findAll(spec, pageable).map(vocabularyMapper::toSummaryResponse));
     }
 
     @Override
@@ -121,7 +123,19 @@ public class VocabularyServiceImpl implements VocabularyService {
         vocabularyRepository.save(vocabulary);
     }
 
+    /**
+     * Dùng cho 3 method admin (getVocabularyByIdForAdmin/updateVocabulary/deleteVocabulary) -
+     * Admin chỉ được thao tác Vocabulary hệ thống (ownerId=null), KHÔNG được sửa/xoá Vocabulary
+     * custom của User qua kênh quản trị này (D1, docs/testing/06_ROLES_PERMISSIONS_MATRIX.md).
+     * Trả 404 thay vì 403 khi gặp Vocabulary custom - không tiết lộ tồn tại, cùng quy tắc
+     * getSystemVocabularyById phía trên (phát hiện thiếu check này qua Security Audit
+     * 2026-08-03, xem docs/testing/31_SECURITY_CHECKLIST.md mục 8).
+     */
     private Vocabulary findVocabularyOrThrow(Long id) {
-        return vocabularyRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
+        Vocabulary vocabulary = vocabularyRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
+        if (vocabulary.getOwner() != null) {
+            throw new ResourceNotFoundException();
+        }
+        return vocabulary;
     }
 }

@@ -64,6 +64,14 @@ class VocabularyServiceImplTest {
         return vocabulary;
     }
 
+    private Vocabulary customWord() {
+        Vocabulary vocabulary = systemWord();
+        User owner = new User();
+        owner.setId(2L);
+        vocabulary.setOwner(owner);
+        return vocabulary;
+    }
+
     @Test
     void getSystemVocabularies_returnsMappedPage() {
         Page<Vocabulary> page = new PageImpl<>(List.of(systemWord()));
@@ -124,6 +132,25 @@ class VocabularyServiceImplTest {
         VocabularyResponse response = vocabularyService.getVocabularyByIdForAdmin(1L);
 
         assertThat(response.getStatus()).isEqualTo(VocabularyStatus.ARCHIVED);
+    }
+
+    @Test
+    void getVocabularyByIdForAdmin_whenCustomWord_throwsResourceNotFoundException() {
+        Vocabulary vocabulary = customWord();
+        when(vocabularyRepository.findById(1L)).thenReturn(Optional.of(vocabulary));
+
+        assertThatThrownBy(() -> vocabularyService.getVocabularyByIdForAdmin(1L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getAllVocabulariesForAdmin_filtersOutCustomWords() {
+        when(vocabularyRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(systemWord())));
+
+        var result = vocabularyService.getAllVocabulariesForAdmin(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     private VocabularyCreateRequest createRequest() {
@@ -187,6 +214,14 @@ class VocabularyServiceImplTest {
     }
 
     @Test
+    void updateVocabulary_whenCustomWord_throwsResourceNotFoundException() {
+        when(vocabularyRepository.findById(1L)).thenReturn(Optional.of(customWord()));
+
+        assertThatThrownBy(() -> vocabularyService.updateVocabulary(1L, new VocabularyUpdateRequest()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
     void deleteVocabulary_whenFound_softDeletes() {
         Vocabulary vocabulary = systemWord();
         when(vocabularyRepository.findById(1L)).thenReturn(Optional.of(vocabulary));
@@ -201,6 +236,13 @@ class VocabularyServiceImplTest {
     @Test
     void deleteVocabulary_whenNotFound_throwsResourceNotFoundException() {
         when(vocabularyRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> vocabularyService.deleteVocabulary(1L)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteVocabulary_whenCustomWord_throwsResourceNotFoundException() {
+        when(vocabularyRepository.findById(1L)).thenReturn(Optional.of(customWord()));
 
         assertThatThrownBy(() -> vocabularyService.deleteVocabulary(1L)).isInstanceOf(ResourceNotFoundException.class);
     }
