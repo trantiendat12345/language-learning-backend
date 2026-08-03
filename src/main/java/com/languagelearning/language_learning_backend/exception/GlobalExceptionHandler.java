@@ -5,6 +5,7 @@ import com.languagelearning.language_learning_backend.common.constant.ErrorMessa
 import com.languagelearning.language_learning_backend.common.dto.ApiErrorResponse;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -86,6 +87,24 @@ public class GlobalExceptionHandler {
                 .message(ErrorMessage.RESOURCE_NOT_FOUND)
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    /**
+     * Bắt vi phạm unique constraint xảy ra ngay tại DB (race condition 2 request đồng thời cùng
+     * insert, vượt qua được check trùng ở tầng Service vì check đó không atomic với insert -
+     * vd 2 request cùng lúc submit review cho 1 (user, vocabulary) chưa có UserVocabularyProgress).
+     * Không bắt riêng thì rơi xuống catch-all Exception.class bên dưới, trả 500 sai bản chất
+     * (đây là lỗi dữ liệu trùng, không phải lỗi server - phát hiện qua Security Audit 2026-08-03).
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation", ex);
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .code(HttpStatus.CONFLICT.value())
+                .errorCode(ErrorCode.DUPLICATE_RESOURCE)
+                .message(ErrorMessage.DUPLICATE_RESOURCE)
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     /**

@@ -9,6 +9,7 @@ import com.languagelearning.language_learning_backend.common.constant.ErrorMessa
 import com.languagelearning.language_learning_backend.common.dto.ApiErrorResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,6 +75,18 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);
+    }
+
+    @Test
+    void handleDataIntegrityViolationException_returns409_notSwallowedByGenericHandler() {
+        DataIntegrityViolationException ex = new DataIntegrityViolationException("Duplicate entry '1-2' for key 'uk_user_vocab'");
+
+        ResponseEntity<ApiErrorResponse> response = handler.handleDataIntegrityViolationException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_RESOURCE);
+        assertThat(response.getBody().getMessage()).isEqualTo(ErrorMessage.DUPLICATE_RESOURCE);
     }
 
     @Test
