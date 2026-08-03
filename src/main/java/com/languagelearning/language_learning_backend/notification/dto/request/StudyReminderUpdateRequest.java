@@ -5,6 +5,7 @@ import com.languagelearning.language_learning_backend.notification.enums.Reminde
 import com.languagelearning.language_learning_backend.notification.enums.ReminderType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class StudyReminderUpdateRequest {
     private LocalTime reminderTime;
 
     @NotBlank(message = ValidationMessage.STUDY_REMINDER_DAYS_OF_WEEK_REQUIRED)
+    @Size(max = 50, message = ValidationMessage.STUDY_REMINDER_DAYS_OF_WEEK_SIZE)
     private String daysOfWeek;
 
     @NotNull(message = ValidationMessage.STUDY_REMINDER_CHANNEL_REQUIRED)

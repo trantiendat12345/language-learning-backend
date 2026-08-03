@@ -2,6 +2,7 @@ package com.languagelearning.language_learning_backend.quiz.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,5 +16,6 @@ public class QuizAnswerRequest {
 
     private Long selectedOptionId;
 
+    @Size(max = 500, message = ValidationMessage.QUIZ_ANSWER_TYPED_ANSWER_SIZE)
     private String typedAnswer;
 }

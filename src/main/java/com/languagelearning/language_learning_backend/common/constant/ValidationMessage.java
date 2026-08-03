@@ -16,6 +16,11 @@ public final class ValidationMessage {
     public static final String USERNAME_NO_WHITESPACE = "Username không được chứa khoảng trắng";
     public static final String EMAIL_REQUIRED = "Email không được để trống";
     public static final String EMAIL_INVALID = "Email không đúng định dạng";
+    public static final String EMAIL_SIZE = "Email tối đa 255 ký tự";
+
+    // Common - URL field (Giai đoạn 10, Security Audit)
+    public static final String URL_SCHEME_INVALID =
+            "URL phải bắt đầu bằng http://, https:// hoặc là đường dẫn tương đối";
     public static final String PASSWORD_REQUIRED = "Password không được để trống";
     public static final String PASSWORD_PATTERN =
             "Password phải từ 8 ký tự trở lên, có ít nhất 1 chữ và 1 số";
@@ -110,6 +115,7 @@ public final class ValidationMessage {
     public static final String QUIZ_QUESTION_COUNT_MIN = "questionCount phải >= 1 (bỏ trống nếu muốn lấy Tất cả)";
     public static final String QUIZ_DURATION_SECONDS_MIN = "durationSeconds phải >= 0";
     public static final String QUIZ_ANSWER_QUESTION_ID_REQUIRED = "questionId không được để trống";
+    public static final String QUIZ_ANSWER_TYPED_ANSWER_SIZE = "typedAnswer tối đa 500 ký tự";
 
     // Deck / DeckCard (Giai đoạn 5)
     public static final String DECK_LANGUAGE_ID_REQUIRED = "languageId không được để trống";
@@ -139,5 +145,6 @@ public final class ValidationMessage {
     public static final String STUDY_REMINDER_TYPE_REQUIRED = "type không được để trống";
     public static final String STUDY_REMINDER_TIME_REQUIRED = "reminderTime không được để trống";
     public static final String STUDY_REMINDER_DAYS_OF_WEEK_REQUIRED = "daysOfWeek không được để trống";
+    public static final String STUDY_REMINDER_DAYS_OF_WEEK_SIZE = "daysOfWeek tối đa 50 ký tự";
     public static final String STUDY_REMINDER_CHANNEL_REQUIRED = "channel không được để trống";
 }

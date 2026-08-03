@@ -23,6 +23,7 @@ public class RegisterRequest {
 
     @NotBlank(message = ValidationMessage.EMAIL_REQUIRED)
     @Email(message = ValidationMessage.EMAIL_INVALID)
+    @Size(max = 255, message = ValidationMessage.EMAIL_SIZE)
     private String email;
 
     @NotBlank(message = ValidationMessage.PASSWORD_REQUIRED)
