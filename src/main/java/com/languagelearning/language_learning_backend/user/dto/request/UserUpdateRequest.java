@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.user.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import com.languagelearning.language_learning_backend.user.enums.DailyGoalType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ public class UserUpdateRequest {
     private String displayName;
 
     @Size(max = 500, message = ValidationMessage.AVATAR_URL_SIZE)
+    @SafeUrl
     private String avatarUrl;
 
     @Past(message = ValidationMessage.BIRTHDAY_MUST_BE_PAST)

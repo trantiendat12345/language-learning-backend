@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.vocabulary.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import com.languagelearning.language_learning_backend.vocabulary.enums.VocabularyStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -28,12 +29,14 @@ public class VocabularyUpdateRequest {
     private String ipa;
 
     @Size(max = 500, message = ValidationMessage.VOCABULARY_AUDIO_URL_SIZE)
+    @SafeUrl
     private String pronunciationAudioUrl;
 
     @Size(max = 30, message = ValidationMessage.VOCABULARY_WORD_TYPE_SIZE)
     private String wordType;
 
     @Size(max = 500, message = ValidationMessage.VOCABULARY_IMAGE_URL_SIZE)
+    @SafeUrl
     private String imageUrl;
 
     @Size(max = 20, message = ValidationMessage.VOCABULARY_DIFFICULTY_SIZE)

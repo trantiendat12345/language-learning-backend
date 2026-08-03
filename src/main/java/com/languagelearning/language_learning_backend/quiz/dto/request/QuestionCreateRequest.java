@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.quiz.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import com.languagelearning.language_learning_backend.quiz.enums.QuestionSourceType;
 import com.languagelearning.language_learning_backend.quiz.enums.QuestionType;
 import jakarta.validation.Valid;
@@ -32,9 +33,11 @@ public class QuestionCreateRequest {
     private String promptText;
 
     @Size(max = 500, message = ValidationMessage.QUESTION_PROMPT_AUDIO_URL_SIZE)
+    @SafeUrl
     private String promptAudioUrl;
 
     @Size(max = 500, message = ValidationMessage.QUESTION_PROMPT_IMAGE_URL_SIZE)
+    @SafeUrl
     private String promptImageUrl;
 
     private String explanation;

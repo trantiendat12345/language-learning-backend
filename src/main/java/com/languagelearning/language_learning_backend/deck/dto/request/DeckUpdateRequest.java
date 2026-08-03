@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.deck.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import com.languagelearning.language_learning_backend.deck.enums.DeckStatus;
 import com.languagelearning.language_learning_backend.deck.enums.DeckVisibility;
 import jakarta.validation.constraints.NotBlank;
@@ -20,6 +21,7 @@ public class DeckUpdateRequest {
     private String description;
 
     @Size(max = 500, message = ValidationMessage.DECK_COVER_IMAGE_URL_SIZE)
+    @SafeUrl
     private String coverImageUrl;
 
     @NotNull(message = ValidationMessage.DECK_VISIBILITY_REQUIRED)

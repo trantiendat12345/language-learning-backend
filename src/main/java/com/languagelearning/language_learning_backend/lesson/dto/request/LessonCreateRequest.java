@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.lesson.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -21,9 +22,11 @@ public class LessonCreateRequest {
     private int displayOrder;
 
     @Size(max = 500, message = ValidationMessage.LESSON_VIDEO_URL_SIZE)
+    @SafeUrl
     private String videoUrl;
 
     @Size(max = 500, message = ValidationMessage.LESSON_AUDIO_URL_SIZE)
+    @SafeUrl
     private String audioUrl;
 
     @Min(value = 0, message = ValidationMessage.LESSON_ESTIMATED_MINUTES_MIN)

@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.language.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -25,5 +26,6 @@ public class LanguageCreateRequest {
     private String name;
 
     @Size(max = 500, message = ValidationMessage.LANGUAGE_FLAG_ICON_URL_SIZE)
+    @SafeUrl
     private String flagIconUrl;
 }

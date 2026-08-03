@@ -1,6 +1,7 @@
 package com.languagelearning.language_learning_backend.course.dto.request;
 
 import com.languagelearning.language_learning_backend.common.constant.ValidationMessage;
+import com.languagelearning.language_learning_backend.common.validation.SafeUrl;
 import com.languagelearning.language_learning_backend.course.enums.CourseStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +22,7 @@ public class CourseUpdateRequest {
     private String description;
 
     @Size(max = 500, message = ValidationMessage.COURSE_THUMBNAIL_URL_SIZE)
+    @SafeUrl
     private String thumbnailUrl;
 
     @Size(max = 20, message = ValidationMessage.COURSE_DIFFICULTY_SIZE)
