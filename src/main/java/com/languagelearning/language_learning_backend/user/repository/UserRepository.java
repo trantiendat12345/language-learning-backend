@@ -1,12 +1,14 @@
 package com.languagelearning.language_learning_backend.user.repository;
 
 import com.languagelearning.language_learning_backend.user.entity.User;
+import com.languagelearning.language_learning_backend.user.enums.UserStatus;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     Optional<User> findByUsername(String username);
 
@@ -15,6 +17,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    /** Dùng cho Admin Dashboard - Active Users. */
+    long countByStatus(UserStatus status);
 
     /**
      * Đăng nhập chấp nhận cả username lẫn email trong cùng 1 ô nhập — xem 11_FRS_TC_AUTH.md.
