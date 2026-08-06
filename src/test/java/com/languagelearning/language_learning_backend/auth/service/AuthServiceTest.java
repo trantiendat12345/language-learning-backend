@@ -19,7 +19,6 @@ import com.languagelearning.language_learning_backend.auth.entity.VerificationTo
 import com.languagelearning.language_learning_backend.auth.enums.TokenType;
 import com.languagelearning.language_learning_backend.auth.exception.AccountDisabledException;
 import com.languagelearning.language_learning_backend.auth.exception.AccountLockedException;
-import com.languagelearning.language_learning_backend.auth.exception.EmailNotVerifiedException;
 import com.languagelearning.language_learning_backend.auth.exception.EmailTakenException;
 import com.languagelearning.language_learning_backend.auth.exception.InvalidCredentialsException;
 import com.languagelearning.language_learning_backend.auth.exception.PasswordMismatchException;
@@ -110,7 +109,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_withValidData_createsUserWithPendingVerificationStatus() {
+    void register_withValidData_createsUserWithActiveStatus() {
         RegisterRequest request = validRegisterRequest();
         Role userRole = new Role();
         userRole.setCode("USER");
@@ -127,14 +126,10 @@ class AuthServiceTest {
         UserResponse response = authService.register(request);
 
         assertThat(response.getUsername()).isEqualTo("newuser01");
-        assertThat(response.getStatus()).isEqualTo(UserStatus.PENDING_VERIFICATION);
-        verify(verificationTokenRepository).save(verificationTokenCaptor.capture());
-        // Không thể lấy trực tiếp token gốc (chỉ log ra, không trả về UserResponse), nhưng
-        // vẫn khẳng định được: giá trị lưu DB đúng định dạng SHA-256 hex digest (64 ký tự
-        // hex thường) — bằng chứng gián tiếp hashToken() đã chạy. Test chính xác hơn (so
-        // token gốc vs hash) nằm ở login_storesRefreshTokenAsSha256Hash_notThePlaintextValue
-        // bên dưới, vì login trả token gốc ra AuthResponse nên so sánh được trực tiếp.
-        assertThat(verificationTokenCaptor.getValue().getTokenHash()).hasSize(64).matches("^[0-9a-f]{64}$");
+        // Bước xác thực email đang tắt ở MVP (2026-08-06, xem Javadoc AuthService.register()) -
+        // tài khoản mới dùng được ngay, không còn tạo VerificationToken EMAIL_VERIFY.
+        assertThat(response.getStatus()).isEqualTo(UserStatus.ACTIVE);
+        verify(verificationTokenRepository, never()).save(any());
     }
 
     @Test
@@ -229,13 +224,20 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_whenStatusPendingVerification_throwsEmailNotVerifiedException() {
+    void login_whenStatusPendingVerification_stillSucceeds_becauseEmailVerificationDisabled() {
+        // Register không còn tạo user PENDING_VERIFICATION nữa (MVP tắt xác thực email), nhưng
+        // login vẫn phải xử lý đúng cho row cũ còn ở trạng thái này (không chặn, không lỗi) -
+        // xem Javadoc AuthService.login().
         User user = activeUser();
         user.setStatus(UserStatus.PENDING_VERIFICATION);
         when(userRepository.findByUsernameOrEmail("user01")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.matches("Passw0rd1", "hashed-password")).thenReturn(true);
+        when(jwtService.generateAccessToken(1L, "user01", java.util.List.of())).thenReturn("access-token");
 
-        assertThatThrownBy(() -> authService.login(loginRequest())).isInstanceOf(EmailNotVerifiedException.class);
+        AuthResponse response = authService.login(loginRequest());
+
+        assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.getRefreshToken()).isNotBlank();
     }
 
     @Test

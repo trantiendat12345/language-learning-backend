@@ -11,7 +11,6 @@ import com.languagelearning.language_learning_backend.auth.entity.VerificationTo
 import com.languagelearning.language_learning_backend.auth.enums.TokenType;
 import com.languagelearning.language_learning_backend.auth.exception.AccountDisabledException;
 import com.languagelearning.language_learning_backend.auth.exception.AccountLockedException;
-import com.languagelearning.language_learning_backend.auth.exception.EmailNotVerifiedException;
 import com.languagelearning.language_learning_backend.auth.exception.EmailTakenException;
 import com.languagelearning.language_learning_backend.auth.exception.InvalidCredentialsException;
 import com.languagelearning.language_learning_backend.auth.exception.PasswordMismatchException;
@@ -48,8 +47,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Nghiệp vụ đăng ký/đăng nhập. Login kiểm tra `User.status` thủ công (không dùng
  * Spring AuthenticationManager) để ném đúng exception con theo từng trạng thái tài khoản
- * (DISABLED/LOCKED/PENDING_VERIFICATION cần message riêng biệt — xem
- * docs/testing/11_FRS_TC_AUTH.md mục 1.2).
+ * (DISABLED/LOCKED cần message riêng biệt — xem docs/testing/11_FRS_TC_AUTH.md mục 1.2).
+ * Bước xác thực email sau đăng ký đang TẮT ở MVP (chưa có gửi email thật, xem quyết định
+ * ở register()) — endpoint `verify-email`/`EmailNotVerifiedException`/`TokenType.EMAIL_VERIFY`
+ * vẫn giữ lại hạ tầng, không bị gọi tới qua flow chuẩn, để bật lại khi tích hợp email thật.
  */
 @Slf4j
 @Service
@@ -57,7 +58,6 @@ public class AuthService {
 
     private static final String DEFAULT_ROLE_CODE = "USER";
     private static final String DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
-    private static final int EMAIL_VERIFY_TOKEN_HOURS = 24;
     private static final int PASSWORD_RESET_TOKEN_MINUTES = 20;
 
     private final UserRepository userRepository;
@@ -89,8 +89,11 @@ public class AuthService {
     }
 
     /**
-     * Tạo tài khoản mới với status PENDING_VERIFICATION và VerificationToken type EMAIL_VERIFY.
-     * MVP: link xác thực chỉ log ra console thay vì gửi email thật (xem 11_FRS_TC_AUTH.md mục 1.1).
+     * Tạo tài khoản mới với status ACTIVE, dùng được ngay không cần xác thực email.
+     * **Quyết định chốt khi code (2026-08-06):** MVP tắt hẳn bước xác thực email sau đăng ký —
+     * hệ thống chưa gửi email thật (chỉ log link ra console), gây bất tiện khi test/dùng thử.
+     * Không còn tạo `VerificationToken` type EMAIL_VERIFY ở bước này (xem
+     * docs/testing/11_FRS_TC_AUTH.md mục 1.1/1.2, đã cập nhật lại theo quyết định này).
      */
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -114,15 +117,9 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setTimezone(DEFAULT_TIMEZONE);
-        user.setStatus(UserStatus.PENDING_VERIFICATION);
+        user.setStatus(UserStatus.ACTIVE);
         user.setRoles(Set.of(userRole));
         user = userRepository.save(user);
-
-        String rawToken = createVerificationToken(user, TokenType.EMAIL_VERIFY, Duration.ofHours(EMAIL_VERIFY_TOKEN_HOURS));
-        log.info(
-                "[MVP email] Link xác thực cho {}: GET /api/auth/verify-email?token={}",
-                user.getEmail(),
-                rawToken);
 
         return userMapper.toResponse(user);
     }
@@ -142,10 +139,13 @@ public class AuthService {
         }
 
         switch (user.getStatus()) {
-            case PENDING_VERIFICATION -> throw new EmailNotVerifiedException();
             case DISABLED -> throw new AccountDisabledException();
             case LOCKED -> throw new AccountLockedException();
-            case ACTIVE -> {
+            // PENDING_VERIFICATION xử lý như ACTIVE - bước xác thực email đang tắt ở MVP (xem
+            // Javadoc register()); giữ case này tường minh thay vì xoá hẳn để login vẫn đúng
+            // cho các row cũ còn PENDING_VERIFICATION từ trước khi tắt tính năng, tránh rơi qua
+            // switch mà không match case nào (silent fallthrough).
+            case PENDING_VERIFICATION, ACTIVE -> {
                 // hợp lệ, tiếp tục cấp token
             }
         }

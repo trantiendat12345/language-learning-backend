@@ -12,8 +12,7 @@ public final class CommonMessage {
     public static final String SUCCESS = "Success";
 
     // Auth-specific (Giai đoạn 2)
-    public static final String AUTH_REGISTER_SUCCESS =
-            "Đăng ký thành công, vui lòng kiểm tra email để xác thực tài khoản";
+    public static final String AUTH_REGISTER_SUCCESS = "Đăng ký thành công, bạn có thể đăng nhập ngay";
     public static final String AUTH_LOGIN_SUCCESS = "Đăng nhập thành công";
     public static final String AUTH_LOGOUT_SUCCESS = "Đăng xuất thành công";
     public static final String AUTH_REFRESH_TOKEN_SUCCESS = "Cấp lại Access Token thành công";
